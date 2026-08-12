@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17
+    container_name: aetherqore-db
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: aetherqore
+      POSTGRES_PASSWORD: aetherqore_dev
+      POSTGRES_DB: aetherqore
+    volumes:
+      - aetherqore_pgdata:/var/lib/postgresql/data
+
+volumes:
+  aetherqore_pgdata:
