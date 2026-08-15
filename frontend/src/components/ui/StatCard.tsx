@@ -1,15 +1,15 @@
 type StatCardProps = {
-    label: string;
-    value: string | number;
-    hint: string;
+  label: string
+  value: string | number
+  hint?: string
 }
 
-const StatCard = ({ label, value, hint }: StatCardProps) => {
-    return <div className="stat-card">
-        <div className="stat-card-label">{label}</div>
-        <div className="stat-card-value">{value}</div>
-        <div className="stat-card-hint">{hint}</div>
-    </div>;
+export const StatCard = ({ label, value, hint }: StatCardProps) => {
+  return (
+    <div className="stat-card">
+      <div className="stat-card__label">{label}</div>
+      <div className="stat-card__value">{value}</div>
+      {hint ? <div className="stat-card__hint">{hint}</div> : null}
+    </div>
+  )
 }
-
-export default StatCard;

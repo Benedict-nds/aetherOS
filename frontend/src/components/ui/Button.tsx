@@ -1,13 +1,27 @@
+import type { ReactNode } from 'react'
+
 type ButtonProps = {
-    children: React.ReactNode;
-    onClick?: () => void;
-    variant?: 'primary' | 'secondary' | 'ghost';
-    type?: 'button' | 'submit';
-    disabled?: boolean;
+  children: ReactNode
+  variant?: 'primary' | 'secondary' | 'ghost'
+  type?: 'button' | 'submit'
+  disabled?: boolean
+  onClick?: () => void
+  className?: string
 }
 
-const Button = ({ children, onClick, variant = 'primary', type = 'button', disabled = false }: ButtonProps) => {
-     return <button className={`button ${variant}`} onClick={onClick} disabled={disabled} type={type}>{children}</button>;
-}
+export const Button = ({
+  children,
+  variant = 'primary',
+  type = 'button',
+  disabled = false,
+  onClick,
+  className,
+}: ButtonProps) => {
+  const classes = ['button', `button--${variant}`, className].filter(Boolean).join(' ')
 
-export default Button;
+  return (
+    <button className={classes} type={type} disabled={disabled} onClick={onClick}>
+      {children}
+    </button>
+  )
+}

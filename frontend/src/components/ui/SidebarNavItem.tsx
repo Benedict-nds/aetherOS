@@ -1,16 +1,21 @@
-import { Link } from "react-router-dom";
+import type { ReactNode } from 'react'
+import { NavLink } from 'react-router-dom'
 
-type SideBarNavItemProps = {
-    to: string;
-    label: string;
-    icon: React.ReactNode;
+type SidebarNavItemProps = {
+  to: string
+  label: string
+  icon?: ReactNode
 }
 
-const SideBarNavItem = ({ to, icon, label }: SideBarNavItemProps) => {
-    return <Link to={to} className="side-bar-nav-item">
-        <div className="side-bar-nav-item-icon">{icon}</div>
-        <div className="side-bar-nav-item-label">{label}</div>
-    </Link>;
+function navItemClassName({ isActive }: { isActive: boolean }) {
+  return isActive ? 'sidebar-nav-item sidebar-nav-item--active' : 'sidebar-nav-item'
 }
 
-export default SideBarNavItem;
+export const SidebarNavItem = ({ to, label, icon }: SidebarNavItemProps) => {
+  return (
+    <NavLink to={to} end={true} className={navItemClassName}>
+      {icon ? <span className="sidebar-nav-item__icon">{icon}</span> : null}
+      <span>{label}</span>
+    </NavLink>
+  )
+}

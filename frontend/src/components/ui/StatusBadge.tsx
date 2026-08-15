@@ -1,10 +1,15 @@
+import type { ReactNode } from 'react'
+
 type StatusBadgeProps = {
-    status: 'healthy' | 'low' | 'critical';
-    children: React.ReactNode;
+  status: 'healthy' | 'low' | 'critical'
+  children: ReactNode
 }
 
-const StatusBadge = ({ status, children }: StatusBadgeProps) => {
-    return <div className={`status-badge ${status}`}>{children}</div>;
+export const StatusBadge = ({ status, children }: StatusBadgeProps) => {
+  return (
+    <span className={`status-badge status-badge--${status}`}>
+      <span className="status-badge__dot" aria-hidden="true" />
+      {children}
+    </span>
+  )
 }
-
-export default StatusBadge;

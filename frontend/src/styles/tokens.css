@@ -1,12 +1,35 @@
 :root {
-    --bg-base: #0B0D10;
-    --bg-surface: #15181C;
-    --bg-elevated: #1E2227;
-    --border-subtle: #2A2F35;
-    --text-primary: #F5F6F7;
-    --text-secondary: #9AA2AB;
-    --accent-primary: #38BDF8;
-    --status-healthy: #22C55E;
-    --status-warning: #F59E0B;
-    --status-critical: #EF4444;
-  }
+  --bg-base: #0B0D10;
+  --bg-surface: #15181C;
+  --bg-elevated: #1E2227;
+  --border-subtle: #2A2F35;
+  --text-primary: #F5F6F7;
+  --text-secondary: #9AA2AB;
+  --accent-primary: #38BDF8;
+  --status-healthy: #22C55E;
+  --status-warning: #F59E0B;
+  --status-critical: #EF4444;
+
+  --font-sans: Inter, system-ui, sans-serif;
+
+  --text-display-size: 32px;
+  --text-display-weight: 700;
+  --text-display-leading: 1.2;
+  --text-display-tracking: -0.5px;
+
+  --text-h1-size: 22px;
+  --text-h1-weight: 600;
+  --text-h1-leading: 1.3;
+
+  --text-h2-size: 15px;
+  --text-h2-weight: 600;
+  --text-h2-leading: 1.35;
+
+  --text-body-size: 14px;
+  --text-body-weight: 400;
+  --text-body-leading: 1.4;
+
+  --text-caption-size: 12px;
+  --text-caption-weight: 400;
+  --text-caption-leading: 1.35;
+}
