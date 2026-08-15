@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Button, InputField } from '../../../components/ui'
-import '../../../styles/login.css'
+import { useNavigate } from 'react-router-dom'
+import { Button, InputField } from '@/components/ui'
+import '@/styles/login.css'
 
 const logoSrc = '/assets/logo.png'
 
 export const LoginPage = () => {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [keepSignedIn, setKeepSignedIn] = useState(false)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    // wire up auth here
+    navigate('/')
   }
 
   return (
@@ -67,9 +69,9 @@ export const LoginPage = () => {
                   />
                   <span>Keep me signed in</span>
                 </label>
-                <a href="#" className="login__forgot">
+                <button type="button" className="login__forgot">
                   Forgot password?
-                </a>
+                </button>
               </div>
 
               <Button type="submit" variant="primary" className="login__submit">
@@ -88,7 +90,7 @@ export const LoginPage = () => {
         </div>
 
         <div className="login__footer">
-          © 2026 AetherQore, Inc. · <a href="#">Privacy</a> · <a href="#">Terms</a>
+          © 2026 AetherQore, Inc. · Privacy · Terms
         </div>
       </div>
     </div>

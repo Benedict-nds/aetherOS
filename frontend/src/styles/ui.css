@@ -71,6 +71,10 @@
   color: var(--text-secondary);
 }
 
+.input-field input:focus {
+  border-color: var(--accent-primary);
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -177,4 +181,10 @@
 
 .sidebar-nav-item--active .sidebar-nav-item__icon {
   color: var(--accent-primary);
+}
+
+.stat-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
 }
