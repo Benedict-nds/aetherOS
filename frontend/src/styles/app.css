@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body{
+  margin:0;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+a{
+  color: inherit;
+  text-decoration: none;
+}
