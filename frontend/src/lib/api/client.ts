@@ -1,17 +1,17 @@
+import axios from 'axios'
 import type { ApiResponse } from './types'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
+  headers: { 'Content-Type': 'application/json' },
+})
 
 export async function apiGet<T>(path: string): Promise<ApiResponse<T>> {
-  const res = await fetch(`${BASE_URL}${path}`)
-  return res.json()
+  const { data } = await api.get<ApiResponse<T>>(path)
+  return data
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  return res.json()
+  const { data } = await api.post<ApiResponse<T>>(path, body)
+  return data
 }

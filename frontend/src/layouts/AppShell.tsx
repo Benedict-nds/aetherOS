@@ -1,30 +1,26 @@
 import { Outlet, useLocation } from 'react-router-dom'
+import { Box, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
 import { SidebarNavItem } from '@/components/ui'
-import {
-  IconBox,
-  IconGrid,
-  IconInboxDownload,
-  IconShoppingBag,
-  IconSparkle,
-} from '@/components/icons'
 import './AppShell.css'
+
+const NAV_ICON_PROPS = { size: 18, strokeWidth: 1.75, 'aria-hidden': true } as const
 
 const NAV_SECTIONS = [
   {
     heading: 'Workspace',
-    items: [{ to: '/', label: 'Command Center', icon: <IconGrid /> }],
+    items: [{ to: '/', label: 'Command Center', icon: <LayoutGrid {...NAV_ICON_PROPS} /> }],
   },
   {
     heading: 'Manage',
     items: [
-      { to: '/inventory', label: 'Inventory', icon: <IconBox /> },
-      { to: '/pos', label: 'Point of Sale', icon: <IconShoppingBag /> },
-      { to: '/purchases/receive', label: 'Receive Shipment', icon: <IconInboxDownload /> },
+      { to: '/inventory', label: 'Inventory', icon: <Box {...NAV_ICON_PROPS} /> },
+      { to: '/pos', label: 'Point of Sale', icon: <ShoppingBag {...NAV_ICON_PROPS} /> },
+      { to: '/purchases/receive', label: 'Receive Shipment', icon: <Inbox {...NAV_ICON_PROPS} /> },
     ],
   },
   {
     heading: 'Intelligence',
-    items: [{ to: '/copilot', label: 'AI Copilot', icon: <IconSparkle /> }],
+    items: [{ to: '/copilot', label: 'AI Copilot', icon: <Sparkles {...NAV_ICON_PROPS} /> }],
   },
 ]
 
