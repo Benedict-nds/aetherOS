@@ -183,8 +183,3 @@
   color: var(--accent-primary);
 }
 
-.stat-card-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
