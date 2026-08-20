@@ -1,4 +1,6 @@
 import { StatCard } from '@/components/ui'
+import { AiRecommendationsCard } from '../components/AiRecommendationsCard'
+import { RevenueCard } from '../components/RevenueCard'
 
 export const CommandCenterPage = () => {
   return (
@@ -7,6 +9,8 @@ export const CommandCenterPage = () => {
       <StatCard label="Low Stock Items" value={0} hint="Items below reorder point" />
       <StatCard label="Expiring Soon" value={0} hint="Medicines within 30 days" />
       <StatCard label="Open Orders" value={0} hint="Purchase orders in progress" />
+      <AiRecommendationsCard />
+      <RevenueCard />
     </div>
   )
 }
