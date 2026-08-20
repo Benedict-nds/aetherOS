@@ -1,6 +1,38 @@
 @import 'tailwindcss';
 @import './ui.css';
 
+
+@theme inline{
+/* Colors → bg-*, text-*, border-* */
+--color-base: var(--bg-base);
+--color-surface: var(--bg-surface);
+--color-elevated: var(--bg-elevated);
+--color-subtle: var(--border-subtle);
+--color-fg: var(--text-primary);
+--color-muted: var(--text-secondary);
+--color-accent: var(--accent-primary);
+--color-healthy: var(--status-healthy);
+--color-warning: var(--status-warning);
+--color-critical: var(--status-critical);
+
+/* Type → text-display, text-h1, … (weights stay font-bold / font-semibold) */
+--text-display: var(--text-display-size);
+--text-display--line-height: var(--text-display-leading);
+--text-display--letter-spacing: var(--text-display-tracking);
+--text-h1: var(--text-h1-size);
+--text-h1--line-height: var(--text-h1-leading);
+--text-h2: var(--text-h2-size);
+--text-h2--line-height: var(--text-h2-leading);
+--text-body: var(--text-body-size);
+--text-body--line-height: var(--text-body-leading);
+--text-caption: var(--text-caption-size);
+--text-caption--line-height: var(--text-caption-leading);
+
+/* Layout constants (Figma sizes you’d otherwise write as [240px] / [860px]) */
+--spacing-sidebar: 240px;
+--breakpoint-login: 860px;
+}
+
 *,
 *::before,
 *::after { box-sizing: border-box; }
