@@ -102,6 +102,31 @@ curl -X POST http://127.0.0.1:8000/api/auth/logout \
 
 For this MVP, logout is client-side: delete the stored token after a successful logout response. Tokens are not blacklisted on the server.
 
+### Dashboard summary
+
+```bash
+curl http://127.0.0.1:8000/api/dashboard/summary \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+Example response:
+
+```json
+{
+  "success": true,
+  "data": {
+    "today_sales": { "amount": 0, "currency": "GHS" },
+    "low_stock_count": 0,
+    "expiring_soon_count": 0,
+    "open_orders_count": 0
+  },
+  "message": "Dashboard summary retrieved",
+  "errors": []
+}
+```
+
+Values are placeholders until inventory, sales, and purchase-order modules are implemented.
+
 ## CORS
 
 The API allows browser requests from the Vite frontend by default (`http://localhost:5173`). Override with a comma-separated list:

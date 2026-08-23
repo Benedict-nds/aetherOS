@@ -11,6 +11,7 @@ from app.core.handlers import register_exception_handlers
 from app.core.responses import error_response, success_response
 from app.core.seed import seed_demo_user
 from app.modules.auth.router import router as auth_router
+from app.modules.dashboard.router import router as dashboard_router
 
 
 @asynccontextmanager
@@ -45,6 +46,12 @@ app.include_router(
     auth_router,
     prefix="/api/auth",
     tags=["auth"],
+)
+
+app.include_router(
+    dashboard_router,
+    prefix="/api/dashboard",
+    tags=["dashboard"],
 )
 
 
