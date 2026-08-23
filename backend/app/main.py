@@ -1,11 +1,13 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.db import SessionLocal, engine
+from app.core.handlers import register_exception_handlers
 from app.core.responses import error_response, success_response
 from app.core.seed import seed_demo_user
 from app.modules.auth.router import router as auth_router
@@ -29,27 +31,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+register_exception_handlers(app)
+
 app.include_router(
     auth_router,
     prefix="/api/auth",
     tags=["auth"],
 )
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
-    if isinstance(exc.detail, dict) and "success" in exc.detail:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=exc.detail,
-            headers=getattr(exc, "headers", None),
-        )
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail},
-        headers=getattr(exc, "headers", None),
-    )
 
 
 @app.get("/health")

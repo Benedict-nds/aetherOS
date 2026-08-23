@@ -102,6 +102,27 @@ curl -X POST http://127.0.0.1:8000/api/auth/logout \
 
 For this MVP, logout is client-side: delete the stored token after a successful logout response. Tokens are not blacklisted on the server.
 
+## CORS
+
+The API allows browser requests from the Vite frontend by default (`http://localhost:5173`). Override with a comma-separated list:
+
+```env
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+## Error responses
+
+All API errors use the same envelope as successful responses:
+
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Validation failed",
+  "errors": ["body -> email: value is not a valid email address"]
+}
+```
+
 ## Tests
 
 ```bash
