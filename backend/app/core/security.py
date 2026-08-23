@@ -11,9 +11,6 @@ from app.core.responses import error_response
 from app.models.user import User
 from app.modules.auth.repository import get_user_by_id
 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_HOURS = 8
-
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
@@ -41,7 +38,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(user_id: int, role: str) -> str:
     expires_at = datetime.now(timezone.utc) + timedelta(
-        hours=ACCESS_TOKEN_EXPIRE_HOURS
+        hours=settings.access_token_expire_hours
     )
 
     payload = {
@@ -53,7 +50,7 @@ def create_access_token(user_id: int, role: str) -> str:
     return jwt.encode(
         payload,
         settings.secret_key,
-        algorithm=ALGORITHM,
+        algorithm=settings.jwt_algorithm,
     )
 
 
@@ -62,7 +59,7 @@ def decode_access_token(token: str) -> dict:
         return jwt.decode(
             token,
             settings.secret_key,
-            algorithms=[ALGORITHM],
+            algorithms=[settings.jwt_algorithm],
         )
     except JWTError as exc:
         raise ValueError("Invalid or expired token") from exc

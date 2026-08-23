@@ -1,13 +1,12 @@
-DEMO_EMAIL = "admin@aetherqore.local"
-DEMO_PASSWORD = "Admin123!"
+from app.core.config import settings
 
 
 def test_login_success(client):
     response = client.post(
         "/api/auth/login",
         json={
-            "email": DEMO_EMAIL,
-            "password": DEMO_PASSWORD,
+            "email": settings.demo_email,
+            "password": settings.demo_password,
         },
     )
 
@@ -16,7 +15,7 @@ def test_login_success(client):
     assert body["success"] is True
     assert body["data"]["access_token"]
     assert body["data"]["token_type"] == "bearer"
-    assert body["data"]["user"]["email"] == DEMO_EMAIL
+    assert body["data"]["user"]["email"] == settings.demo_email
     assert "password_hash" not in body["data"]["user"]
 
 
@@ -24,7 +23,7 @@ def test_login_wrong_password(client):
     response = client.post(
         "/api/auth/login",
         json={
-            "email": DEMO_EMAIL,
+            "email": settings.demo_email,
             "password": "WrongPassword!",
         },
     )
@@ -45,8 +44,8 @@ def test_me_with_valid_token(client):
     login_response = client.post(
         "/api/auth/login",
         json={
-            "email": DEMO_EMAIL,
-            "password": DEMO_PASSWORD,
+            "email": settings.demo_email,
+            "password": settings.demo_password,
         },
     )
     token = login_response.json()["data"]["access_token"]
@@ -59,7 +58,7 @@ def test_me_with_valid_token(client):
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["email"] == DEMO_EMAIL
+    assert body["data"]["email"] == settings.demo_email
     assert "password_hash" not in body["data"]
 
 
@@ -67,8 +66,8 @@ def test_logout_with_valid_token(client):
     login_response = client.post(
         "/api/auth/login",
         json={
-            "email": DEMO_EMAIL,
-            "password": DEMO_PASSWORD,
+            "email": settings.demo_email,
+            "password": settings.demo_password,
         },
     )
     token = login_response.json()["data"]["access_token"]
