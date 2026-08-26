@@ -45,3 +45,4 @@ class User(Base):
     )
 
     role = relationship("Role", back_populates="users")
+    audit_logs = relationship("AuditLog", back_populates="user")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -6,6 +6,13 @@ from app.core.db import get_db
 from app.core.responses import error_response, success_response
 from app.core.security import get_current_user
 from app.models.user import User
+from app.modules.audit.service import (
+    ACTION_LOGIN,
+    ACTION_LOGOUT,
+    ENTITY_TYPE_AUTH,
+    create_audit_log,
+    resolve_client_ip,
+)
 from app.modules.auth.schemas import LoginRequest
 from app.modules.auth.service import authenticate_user, create_user_token
 
@@ -25,6 +32,7 @@ def serialize_user(user: User) -> dict:
 @router.post("/login")
 def login(
     payload: LoginRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ):
     user = authenticate_user(
@@ -38,6 +46,15 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=error_response("Invalid credentials"),
         )
+
+    create_audit_log(
+        db,
+        user=user,
+        action=ACTION_LOGIN,
+        entity_type=ENTITY_TYPE_AUTH,
+        ip_address=resolve_client_ip(request),
+        commit=True,
+    )
 
     token = create_user_token(user)
 
@@ -53,8 +70,19 @@ def login(
 
 @router.post("/logout")
 def logout(
+    request: Request,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
+    create_audit_log(
+        db,
+        user=current_user,
+        action=ACTION_LOGOUT,
+        entity_type=ENTITY_TYPE_AUTH,
+        ip_address=resolve_client_ip(request),
+        commit=True,
+    )
+
     return success_response(
         data=None,
         message="Logged out",
