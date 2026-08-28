@@ -10,6 +10,7 @@ from app.core.db import SessionLocal, engine
 from app.core.handlers import register_exception_handlers
 from app.core.responses import error_response, success_response
 from app.core.seed import seed_demo_user
+from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.modules.users.router import router as users_router
@@ -53,6 +54,12 @@ app.include_router(
     dashboard_router,
     prefix="/api/dashboard",
     tags=["dashboard"],
+)
+
+app.include_router(
+    audit_router,
+    prefix="/api/audit",
+    tags=["audit"],
 )
 
 app.include_router(

@@ -102,44 +102,6 @@ curl -X POST http://127.0.0.1:8000/api/auth/logout \
 
 For this MVP, logout is client-side: delete the stored token after a successful logout response. Tokens are not blacklisted on the server.
 
-## User management and authorization
-
-Supported roles: `owner`, `admin`, `pharmacist`, `staff`.
-
-Only `owner` and `admin` can manage user accounts. Role assignment is restricted to prevent privilege escalation (for example, an `admin` cannot create or assign the `owner` role).
-
-### List users
-
-```bash
-curl http://127.0.0.1:8000/api/users \
-  -H "Authorization: Bearer <TOKEN>"
-```
-
-### Create user
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/users \
-  -H "Authorization: Bearer <TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "full_name": "Jane Pharmacist",
-    "email": "jane@pharmacy.com",
-    "username": "janepharma",
-    "password": "SecurePass123!",
-    "role": "pharmacist"
-  }'
-```
-
-Other routes:
-
-- `GET /api/users/{user_id}`
-- `PATCH /api/users/{user_id}`
-- `DELETE /api/users/{user_id}` — deactivates the user
-- `POST /api/users/{user_id}/reactivate`
-- `GET /api/users/roles` — roles the current user may assign
-
-Inactive users cannot authenticate.
-
 ### Dashboard summary
 
 ```bash
