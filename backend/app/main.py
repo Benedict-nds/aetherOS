@@ -13,6 +13,7 @@ from app.core.seed import seed_demo_user
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.dashboard.router import router as dashboard_router
+from app.modules.users.router import router as users_router
 
 
 @asynccontextmanager
@@ -59,6 +60,12 @@ app.include_router(
     audit_router,
     prefix="/api/audit",
     tags=["audit"],
+)
+
+app.include_router(
+    users_router,
+    prefix="/api/users",
+    tags=["users"],
 )
 
 
