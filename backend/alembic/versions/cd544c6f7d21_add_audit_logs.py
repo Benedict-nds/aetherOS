@@ -1,7 +1,7 @@
 """add audit logs
 
 Revision ID: cd544c6f7d21
-Revises: d25b8450e015
+Revises: f1a2b3c4d5e6
 Create Date: 2026-08-26 17:56:51.418644
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'cd544c6f7d21'
-down_revision: Union[str, Sequence[str], None] = 'd25b8450e015'
+down_revision: Union[str, Sequence[str], None] = 'f1a2b3c4d5e6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
