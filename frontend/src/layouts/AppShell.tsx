@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Box, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
 import { SidebarNavItem } from '@/components/ui'
 
@@ -24,18 +24,7 @@ const NAV_SECTIONS = [
   },
 ]
 
-const PAGE_TITLES: Record<string, string> = {
-  '/': 'Command Center',
-  '/inventory': 'Inventory',
-  '/pos': 'Point of Sale',
-  '/purchases/receive': 'Receive Shipment',
-  '/copilot': 'AI Copilot',
-}
-
 export const AppShell = () => {
-  const { pathname } = useLocation()
-  const title = PAGE_TITLES[pathname] ?? 'AetherQore'
-
   return (
     <div className="flex min-h-screen bg-base text-fg">
       <aside className="flex w-sidebar shrink-0 flex-col justify-between border-r border-subtle bg-surface px-4 py-5">
@@ -69,9 +58,6 @@ export const AppShell = () => {
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-16 items-center border-b border-subtle px-8">
-          <h1 className='m-0 text-h1 font-semibold'>{title}</h1>
-        </header>
         <main className="flex-1 px-8 py-7">
           <Outlet />
         </main>
