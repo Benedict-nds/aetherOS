@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.permissions import ROLE_ADMIN, ROLE_OWNER, require_roles
 from app.core.responses import success_response
 from app.models.user import User
+from app.modules.audit.service import resolve_client_ip
 from app.modules.users.schemas import UserCreate, UserUpdate
 from app.modules.users.service import (
     create_user_record,
@@ -36,10 +37,16 @@ def list_users(
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_user(
     payload: UserCreate,
+    request: Request,
     current_user: User = Depends(manage_users),
     db: Session = Depends(get_db),
 ):
-    user = create_user_record(db, current_user, payload)
+    user = create_user_record(
+        db,
+        current_user,
+        payload,
+        ip_address=resolve_client_ip(request),
+    )
     return success_response(data=user, message="User created")
 
 
@@ -68,28 +75,47 @@ def get_user(
 def update_user(
     user_id: int,
     payload: UserUpdate,
+    request: Request,
     current_user: User = Depends(manage_users),
     db: Session = Depends(get_db),
 ):
-    user = update_user_record(db, current_user, user_id, payload)
+    user = update_user_record(
+        db,
+        current_user,
+        user_id,
+        payload,
+        ip_address=resolve_client_ip(request),
+    )
     return success_response(data=user, message="User updated")
 
 
 @router.delete("/{user_id}")
 def deactivate_user(
     user_id: int,
+    request: Request,
     current_user: User = Depends(manage_users),
     db: Session = Depends(get_db),
 ):
-    deactivate_user_record(db, current_user, user_id)
+    deactivate_user_record(
+        db,
+        current_user,
+        user_id,
+        ip_address=resolve_client_ip(request),
+    )
     return success_response(data=None, message="User deactivated")
 
 
 @router.post("/{user_id}/reactivate")
 def reactivate_user(
     user_id: int,
+    request: Request,
     current_user: User = Depends(manage_users),
     db: Session = Depends(get_db),
 ):
-    user = reactivate_user_record(db, current_user, user_id)
+    user = reactivate_user_record(
+        db,
+        current_user,
+        user_id,
+        ip_address=resolve_client_ip(request),
+    )
     return success_response(data=user, message="User reactivated")

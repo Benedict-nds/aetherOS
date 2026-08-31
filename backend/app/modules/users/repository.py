@@ -39,13 +39,17 @@ def list_roles(db: Session) -> list[Role]:
 
 
 def save_user(db: Session, user: User) -> User:
+    """Persist a new user within the caller's transaction.
+
+    Flushes rather than commits so callers can record an audit event in the
+    same transaction and control the commit boundary.
+    """
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    db.flush()
     return user
 
 
 def update_user(db: Session, user: User) -> User:
-    db.commit()
-    db.refresh(user)
+    """Flush pending user changes without ending the caller's transaction."""
+    db.flush()
     return user

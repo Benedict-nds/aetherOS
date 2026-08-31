@@ -15,6 +15,14 @@ from app.core.permissions import (
 )
 from app.core.security import hash_password
 from app.models.user import User
+from app.modules.audit.service import (
+    ACTION_CREATE,
+    ACTION_DEACTIVATE,
+    ACTION_REACTIVATE,
+    ACTION_UPDATE,
+    ENTITY_TYPE_USER,
+    create_audit_log,
+)
 from app.modules.users import repository
 from app.modules.users.schemas import UserCreate, UserResponse, UserUpdate
 
@@ -31,6 +39,18 @@ def serialize_user(user: User) -> dict:
         created_at=user.created_at.isoformat(),
         updated_at=user.updated_at.isoformat(),
     ).model_dump()
+
+
+def _audit_details(user: User, role_name: str, **extra) -> dict:
+    """Safe metadata for user audit events. Never includes credentials."""
+    details = {
+        "username": user.username,
+        "email": user.email,
+        "role": role_name,
+        "status": user.status,
+    }
+    details.update(extra)
+    return details
 
 
 def _normalize_email(email: str) -> str:
@@ -70,7 +90,13 @@ def get_user_record(db: Session, user_id: int) -> dict | None:
     return serialize_user(user)
 
 
-def create_user_record(db: Session, actor: User, payload: UserCreate) -> dict:
+def create_user_record(
+    db: Session,
+    actor: User,
+    payload: UserCreate,
+    *,
+    ip_address: str | None = None,
+) -> dict:
     email = _normalize_email(str(payload.email))
     username = _normalize_username(payload.username)
 
@@ -104,6 +130,17 @@ def create_user_record(db: Session, actor: User, payload: UserCreate) -> dict:
 
     try:
         saved = repository.save_user(db, user)
+        user_id = saved.id
+        create_audit_log(
+            db,
+            user=actor,
+            action=ACTION_CREATE,
+            entity_type=ENTITY_TYPE_USER,
+            entity_id=user_id,
+            details=_audit_details(saved, role.name),
+            ip_address=ip_address,
+        )
+        db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(
@@ -111,15 +148,18 @@ def create_user_record(db: Session, actor: User, payload: UserCreate) -> dict:
             detail="User conflicts with an existing record",
         ) from exc
 
-    refreshed = repository.get_user_by_id(db, saved.id)
+    refreshed = repository.get_user_by_id(db, user_id)
     return serialize_user(refreshed)
 
 
-def update_user_record(
+def _apply_user_update(
     db: Session,
     actor: User,
     user_id: int,
     payload: UserUpdate,
+    *,
+    action: str,
+    ip_address: str | None,
 ) -> dict:
     user = repository.get_user_by_id(db, user_id)
     if user is None:
@@ -195,6 +235,21 @@ def update_user_record(
 
     try:
         repository.update_user(db, user)
+        create_audit_log(
+            db,
+            user=actor,
+            action=action,
+            entity_type=ENTITY_TYPE_USER,
+            entity_id=user.id,
+            # Field names only: the password value is never recorded.
+            details=_audit_details(
+                user,
+                user.role.name,
+                changed_fields=sorted(updates.keys()),
+            ),
+            ip_address=ip_address,
+        )
+        db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(
@@ -202,11 +257,35 @@ def update_user_record(
             detail="User conflicts with an existing record",
         ) from exc
 
-    refreshed = repository.get_user_by_id(db, user.id)
+    refreshed = repository.get_user_by_id(db, user_id)
     return serialize_user(refreshed)
 
 
-def deactivate_user_record(db: Session, actor: User, user_id: int) -> None:
+def update_user_record(
+    db: Session,
+    actor: User,
+    user_id: int,
+    payload: UserUpdate,
+    *,
+    ip_address: str | None = None,
+) -> dict:
+    return _apply_user_update(
+        db,
+        actor,
+        user_id,
+        payload,
+        action=ACTION_UPDATE,
+        ip_address=ip_address,
+    )
+
+
+def deactivate_user_record(
+    db: Session,
+    actor: User,
+    user_id: int,
+    *,
+    ip_address: str | None = None,
+) -> None:
     user = repository.get_user_by_id(db, user_id)
     if user is None:
         raise HTTPException(
@@ -229,14 +308,32 @@ def deactivate_user_record(db: Session, actor: User, user_id: int) -> None:
     user.status = "inactive"
     user.updated_at = datetime.now(timezone.utc)
     repository.update_user(db, user)
+    create_audit_log(
+        db,
+        user=actor,
+        action=ACTION_DEACTIVATE,
+        entity_type=ENTITY_TYPE_USER,
+        entity_id=user.id,
+        details=_audit_details(user, user.role.name),
+        ip_address=ip_address,
+    )
+    db.commit()
 
 
-def reactivate_user_record(db: Session, actor: User, user_id: int) -> dict:
-    return update_user_record(
+def reactivate_user_record(
+    db: Session,
+    actor: User,
+    user_id: int,
+    *,
+    ip_address: str | None = None,
+) -> dict:
+    return _apply_user_update(
         db,
         actor,
         user_id,
         UserUpdate(status="active"),
+        action=ACTION_REACTIVATE,
+        ip_address=ip_address,
     )
 
 
