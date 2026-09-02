@@ -3,9 +3,9 @@ import { StatCard, Button } from '@/components/ui'
 import { AiRecommendationsCard } from '../components/AiRecommendationsCard'
 import { RevenueCard } from '../components/RevenueCard'
 import { RecentActivity } from '../components/RecentActivity'
+import { useAuth } from '@/app/auth'
 
-// TODO: replace with the signed-in user from your auth context/provider
-const CURRENT_USER = { firstName: 'Amara' }
+
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -15,6 +15,8 @@ function getGreeting() {
 }
 
 export const CommandCenterPage = () => {
+  const {user} = useAuth()
+  const firstName = user?.full_name.trim().split(/\s+/)[0] ?? ''
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -30,7 +32,7 @@ export const CommandCenterPage = () => {
 
       <div>
         <h2 className="m-0 text-h2 font-semibold text-fg">
-          {getGreeting()}, {CURRENT_USER.firstName}
+          {getGreeting()}, {firstName}
         </h2>
         <p className="m-0 mt-1 text-body text-muted">
           Here&rsquo;s what needs your attention today.

@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Box, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
 import { SidebarNavItem } from '@/components/ui'
-
+import { useAuth } from '@/app/auth'
 
 const NAV_ICON_PROPS = { size: 18, strokeWidth: 1.75, 'aria-hidden': true } as const
 
@@ -25,6 +25,13 @@ const NAV_SECTIONS = [
 ]
 
 export const AppShell = () => {
+  const {user, logout} = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () =>{
+    await logout()
+    navigate('/login', {replace: true})
+  }
   return (
     <div className="flex min-h-screen bg-base text-fg">
       <aside className="flex w-sidebar shrink-0 flex-col justify-between border-r border-subtle bg-surface px-4 py-5">
@@ -49,13 +56,17 @@ export const AppShell = () => {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-2.5 py-2 pr-2 pl-1">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex cursor-pointer items-center gap-2.5 border-0 bg-transparent py-2 pr-2 pl-1 text-left"
+        >
           <div className="size-9 shrink-0 rounded-full bg-elevated" aria-hidden="true" />
           <div>
-            <div className="text-body text-fg">Pharmacy Admin</div>
-            <div className="text-caption text-muted">Owner</div>
+            <div className="text-body text-fg">{user?.full_name ?? 'Pharmacy Admin'}</div>
+            <div className="text-caption text-muted">{user?.role ?? 'Owner'}</div>
           </div>
-        </div>
+        </button>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <main className="flex-1 px-8 py-7">
