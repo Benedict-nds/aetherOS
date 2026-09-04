@@ -1,20 +1,39 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useNavigation } from 'react-router-dom'
 import { Button, InputField } from '@/components/ui'
 
+import { useAuth } from '@/app/useAuth'
+import { getErrorMessage } from '@/lib/api/client'
 
 const logoSrc = '/assets/logo.png'
 
 export const LoginPage = () => {
   const navigate = useNavigate()
+  const { user, isReady, login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [keepSignedIn, setKeepSignedIn] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: FormEvent) => {
+
+  if (isReady && user) {
+    return <Navigate to="/" replace />
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    navigate('/')
+    setError(null)
+    setSubmitting(true)
+    try {
+      await login(email, password, keepSignedIn)
+      navigate('/')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Invalid credentials'))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -75,8 +94,12 @@ export const LoginPage = () => {
                 </button>
               </div>
 
-              <Button type="submit" variant="primary" className="mt-1 w-full">
-                Sign in
+              {error ? (
+                <p className="m-0 text-caption text-critical">{error}</p>
+              ) : null}
+
+              <Button type="submit" variant="primary" className="mt-1 w-full" disabled={submitting}>
+                {submitting ? 'Signing in…' : 'Sign in'}
               </Button>
             </form>
 
