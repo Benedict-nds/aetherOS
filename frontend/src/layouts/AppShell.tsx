@@ -26,8 +26,8 @@ const NAV_SECTIONS = [
 
 export const AppShell = () => {
   return (
-    <div className="flex min-h-screen bg-base text-fg">
-      <aside className="flex w-sidebar shrink-0 flex-col justify-between border-r border-subtle bg-surface px-4 py-5">
+    <div className="flex h-screen overflow-hidden bg-base text-fg">
+      <aside className="flex w-sidebar shrink-0 flex-col justify-between overflow-y-auto border-r border-subtle bg-surface px-4 py-5">
         <div className="flex flex-col gap-7">
           <div className="flex items-center gap-2 px-1">
             <img src="/assets/logo.png" alt="" className='h-6 w-auto object-contain'/>
@@ -57,7 +57,7 @@ export const AppShell = () => {
           </div>
         </div>
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <main className="flex-1 px-8 py-7">
           <Outlet />
         </main>
