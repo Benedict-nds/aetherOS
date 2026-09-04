@@ -13,14 +13,20 @@ ACTION_CREATE = "CREATE"
 ACTION_UPDATE = "UPDATE"
 ACTION_DELETE = "DELETE"
 ACTION_VIEW = "VIEW"
+ACTION_DEACTIVATE = "DEACTIVATE"
+ACTION_REACTIVATE = "REACTIVATE"
 
 ENTITY_TYPE_AUTH = "auth"
+ENTITY_TYPE_USER = "user"
 
 _SENSITIVE_DETAIL_KEYS = frozenset(
     {
         "password",
         "password_hash",
+        "new_password",
+        "current_password",
         "access_token",
+        "refresh_token",
         "token",
         "authorization",
         "secret",
@@ -41,17 +47,25 @@ def resolve_client_ip(request: Request) -> str | None:
     return None
 
 
+def _sanitize_value(value):
+    if isinstance(value, dict):
+        return {
+            key: _sanitize_value(nested)
+            for key, nested in value.items()
+            if key.lower() not in _SENSITIVE_DETAIL_KEYS
+        }
+
+    if isinstance(value, list):
+        return [_sanitize_value(item) for item in value]
+
+    return value
+
+
 def _sanitize_details(details: dict | None) -> dict | None:
     if not details:
         return None
 
-    sanitized = {
-        key: value
-        for key, value in details.items()
-        if key.lower() not in _SENSITIVE_DETAIL_KEYS
-    }
-
-    return sanitized or None
+    return _sanitize_value(details) or None
 
 
 def create_audit_log(
