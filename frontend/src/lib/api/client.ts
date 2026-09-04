@@ -7,6 +7,12 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+let onUnauthorized: (() => void) | null = null
+
+export function setOnUnauthorized(handler: (() => void) | null) {
+  onUnauthorized = handler
+}
+
 api.interceptors.request.use((config)=>{
   const token = getToken()
 
@@ -19,10 +25,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) =>{
     const status = error.response?.status
-    const url = String(error.config?.url ?? '')
+    const url = `${error.config?.baseURL ?? ''}${error.config?.url ?? ''}`
     const isLogin = url.includes('/api/auth/login')
-    if (status === 401 && isLogin){
+    if (status === 401 && !isLogin){
       clearToken()
+      onUnauthorized?.()
     }
     return Promise.reject(error)
   },
@@ -44,11 +51,11 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<ApiRespo
  */
 
 export function loginRequest(email: string, password: string){
-  return apiPost<LoginData>('api/auth/login', {email, password})
+  return apiPost<LoginData>('/api/auth/login', {email, password})
 }
 
 export function getMeRequest(){
-  return apiGet<AuthUser>('api/auth/me')
+  return apiGet<AuthUser>('/api/auth/me')
 }
 
 export function logoutRequest() {

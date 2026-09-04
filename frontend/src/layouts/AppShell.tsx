@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Box, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
 import { SidebarNavItem } from '@/components/ui'
-import { useAuth } from '@/app/auth'
+import { useAuth } from '@/app/useAuth'
 
 const NAV_ICON_PROPS = { size: 18, strokeWidth: 1.75, 'aria-hidden': true } as const
 

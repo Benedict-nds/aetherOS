@@ -3,7 +3,7 @@ import { StatCard, Button } from '@/components/ui'
 import { AiRecommendationsCard } from '../components/AiRecommendationsCard'
 import { RevenueCard } from '../components/RevenueCard'
 import { RecentActivity } from '../components/RecentActivity'
-import { useAuth } from '@/app/auth'
+import { useAuth } from '@/app/useAuth'
 
 
 

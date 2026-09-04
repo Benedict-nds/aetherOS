@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { Navigate, useNavigate, useNavigation } from 'react-router-dom'
 import { Button, InputField } from '@/components/ui'
 
-import { useAuth } from '@/app/auth'
+import { useAuth } from '@/app/useAuth'
 import { getErrorMessage } from '@/lib/api/client'
 
 const logoSrc = '/assets/logo.png'

@@ -1,29 +1,22 @@
-import { Children, createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "@/lib/api/types";
-import { getMeRequest, loginRequest, logoutRequest } from "@/lib/api/client";
+import { getMeRequest, loginRequest, logoutRequest, setOnUnauthorized } from "@/lib/api/client";
 import { clearToken, getToken, setToken } from "@/lib/api/auth/token";
-
-type AuthContextValue = {
-    user: AuthUser | null
-    isReady: boolean
-    login: (email: string, password: string, keepSignedIn: boolean) => Promise<void>
-    logout: () => Promise<void>
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
+import { AuthContext } from "./useAuth";
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<AuthUser | null>(null)
-    const [isReady, setIsReady] = useState(false)
+    const [isReady, setIsReady] = useState(() => !getToken())
 
 
     useEffect(() => {
+        setOnUnauthorized(() => setUser(null))
+
         const token = getToken()
         if (!token) {
-            setIsReady(true)
-            return
+            return () => setOnUnauthorized(null)
         }
 
         getMeRequest()
@@ -34,6 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             finally(() => {
                 setIsReady(true)
             })
+
+        return () => setOnUnauthorized(null)
     }, [])
 
     const login = async (email: string, password: string, keepSignedIn: boolean) => {
@@ -63,16 +58,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-
-
-export function useAuth(){
-    const ctx = useContext(AuthContext)
-
-    if (!ctx) {
-        throw new Error('useAuth must be used inside AuthProvider')
-    }
-
-    return ctx
 }
