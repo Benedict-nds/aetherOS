@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import { Button, InputField } from '@/components/ui'
+
+/**
+ * TODO: LOOK INTO WHICH FIELDS WHOULD BE REQUIRED FOR THE MEDICINE
+ */
+
+
 
 type AddMedicineForm = {
   name: string
@@ -66,37 +72,44 @@ type AddMedicineModalProps = {
 
 export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProps) => {
   const [form, setForm] = useState<AddMedicineForm>(EMPTY_FORM)
+  const [error, setError] = useState<string | null>(null)
 
-  // reset the form each time the modal is (re)opened
-  useEffect(() => {
-    if (open) setForm(EMPTY_FORM)
-  }, [open])
+  const handleClose = useCallback(() => {
+    setForm(EMPTY_FORM)
+    setError(null)
+    onClose()
+  }, [onClose])
 
-  // close on Escape
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+  }, [open, handleClose])
 
   if (!open) return null
 
-  const setField = (key: keyof AddMedicineForm) => (value: string) =>
+  const setField = (key: keyof AddMedicineForm) => (value: string) => {
+    if (key === 'name' && error) setError(null)
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    if (!form.name.trim()) {
+      setError('Medicine name is required.')
+      return
+    }
     onSave?.(form)
-    onClose()
+    handleClose()
   }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         role="dialog"
@@ -114,7 +127,7 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
             className="shrink-0 rounded-md p-1 text-muted outline-none hover:bg-elevated hover:text-fg"
           >
@@ -130,6 +143,11 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
             value={form.name}
             onChange={(e) => setField('name')(e.target.value)}
           />
+          {error ? (
+            <p className="-mt-2 m-0 text-caption text-critical" role="alert">
+              {error}
+            </p>
+          ) : null}
 
           <InputField
             label="Generic name"
@@ -180,7 +198,7 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
           />
 
           <div className="mt-2 flex items-center justify-end gap-3">
-            <Button type="button" variant="secondary" onClick={onClose}>
+            <Button type="button" variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">
