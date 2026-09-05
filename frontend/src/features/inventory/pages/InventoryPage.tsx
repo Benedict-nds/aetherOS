@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { ChevronDown, Plus, Search } from 'lucide-react'
 import { Button, StatCard, StatusBadge } from '@/components/ui'
+import { AddMedicineModal } from '../components/AddMedicineModal'
 
 type InventoryStatus = 'healthy' | 'low' | 'critical'
 
@@ -97,11 +99,13 @@ function FilterSelect({ label, options }: { label: string; options: string[] }) 
 }
 
 export const InventoryPage = () => {
+  const [isAddMedicineOpen, setIsAddMedicineOpen] = useState(false)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="m-0 text-display font-bold text-fg">Inventory</h1>
-        <Button variant="primary">
+        <Button variant="primary" onClick={() => setIsAddMedicineOpen(true)}>
           <Plus className="size-4" strokeWidth={2.5} />
           Add Medicine
         </Button>
@@ -167,6 +171,15 @@ export const InventoryPage = () => {
           </tbody>
         </table>
       </div>
+
+      <AddMedicineModal
+        open={isAddMedicineOpen}
+        onClose={() => setIsAddMedicineOpen(false)}
+        onSave={(medicine) => {
+          // TODO: wire up to your actual create-medicine API/mutation
+          console.log('New medicine:', medicine)
+        }}
+      />
     </div>
   )
 }
