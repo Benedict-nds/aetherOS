@@ -165,6 +165,48 @@ Example response:
 
 Values are placeholders until inventory, sales, and purchase-order modules are implemented.
 
+## Inventory catalogue
+
+Medicine catalogue endpoints (FR-INV-001). All routes require authentication.
+
+| Method | Path | Roles |
+|--------|------|-------|
+| GET | `/api/medicines` | owner, admin, pharmacist, staff |
+| POST | `/api/medicines` | owner, admin, pharmacist |
+| GET | `/api/medicines/{id}` | owner, admin, pharmacist, staff |
+| PATCH | `/api/medicines/{id}` | owner, admin, pharmacist |
+| GET | `/api/medicine-categories` | owner, admin, pharmacist, staff |
+| POST | `/api/medicine-categories` | owner, admin |
+
+List medicines query params:
+
+- `q` — search name, generic name, brand name, or barcode (case-insensitive)
+- `category_id` — filter by category
+- `is_active` — defaults to `true` (inactive medicines hidden unless explicitly requested)
+
+On startup, the API seeds three medicine categories and six sample medicines when the catalogue is empty.
+
+### List medicines
+
+```bash
+curl "http://127.0.0.1:8000/api/medicines?q=amox" \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+### Create medicine
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/medicines \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Ibuprofen 400mg Tablet",
+    "generic_name": "Ibuprofen",
+    "barcode": "IBU400001",
+    "reorder_level": 10
+  }'
+```
+
 ## CORS
 
 The API allows browser requests from the Vite frontend by default (`http://localhost:5173`). Override with a comma-separated list:
