@@ -14,10 +14,7 @@ export type CartLine = {
 type PaymentMethod = "Cash" | "MoMo" | "Card"
 
 
-const DISCOUNTS = [0, 5, 10] as const
-
 const PAYMENT_METHODS: PaymentMethod[] = ['Cash', 'MoMo', 'Card']
-const TAX_RATE = 0.05
 
 
 type CartPanelProps = {
@@ -31,8 +28,38 @@ function formatMoney(value:number){
     return `GH₵ ${value.toFixed(2)}`
 }
 
+function parsePct(raw: string) {
+    const n = Number.parseFloat(raw)
+    if (!Number.isFinite(n) || n < 0) return 0
+    return Math.min(n, 100)
+}
+
 function lineTotal(line:CartLine){
     return  line.qty * line.unitPrice
+}
+
+type PctInputProps = {
+    name: string
+    label: string
+    value: string
+    onChange: (value: string) => void
+}
+
+function PctInput({ name, label, value, onChange }: PctInputProps) {
+    return (
+        <div className="flex w-24 items-center gap-1">
+            <input
+                type="text"
+                inputMode="decimal"
+                name={name}
+                aria-label={label}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full rounded-lg border border-subtle bg-elevated px-2 py-1.5 text-right text-body text-fg outline-none focus:border-accent"
+            />
+            <span className="text-caption text-muted">%</span>
+        </div>
+    )
 }
 
 
@@ -41,14 +68,16 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
     const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
     const subtotal = lines.reduce((sum, line) => sum + lineTotal(line), 0)
 
-    const [discountPct, setDiscountPct] = useState<(typeof DISCOUNTS)[number]>(0)
+    const [discountPct, setDiscountPct] = useState('0')
+    const [taxPct, setTaxPct] = useState('5')
     const [payment,setPayment] = useState<PaymentMethod>('Cash')
     const [tendered,setTendered] = useState('')
 
-
-    const discountAmount = subtotal * (discountPct /100)
+    const discountRate = parsePct(discountPct)
+    const taxRate = parsePct(taxPct)
+    const discountAmount = subtotal * (discountRate / 100)
     const taxable = subtotal - discountAmount
-    const tax = taxable * TAX_RATE
+    const tax = taxable * (taxRate / 100)
     const total = taxable + tax
     const tenderedValue = Number.parseFloat(tendered) || 0
     const change = Math.max(0, tenderedValue - total)
@@ -57,7 +86,8 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
     const handleCharge = () => {
         console.log("POS sale (static, no API):",{
             lines,
-            discountPct,
+            discountPct: discountRate,
+            taxPct: taxRate,
             payment,
             subtotal,
             discountAmount,
@@ -127,27 +157,24 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-body text-muted">Discount</span>
-              <div className="flex items-center gap-1.5">
-                {DISCOUNTS.map((pct) => {
-                  const selected = discountPct === pct
-                  return (
-                    <button
-                      key={pct}
-                      type="button"
-                      onClick={() => setDiscountPct(pct)}
-                      className={`rounded-md px-2 py-1 text-caption outline-none ${
-                        selected ? 'bg-accent text-base' : 'bg-elevated text-muted'
-                      }`}
-                    >
-                      {pct}%
-                    </button>
-                  )
-                })}
-              </div>
+              <PctInput
+                name="discountPct"
+                label="Discount percent"
+                value={discountPct}
+                onChange={setDiscountPct}
+              />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-body text-muted">Tax (5%)</span>
-              <span className="text-body text-fg">{formatMoney(tax)}</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-body text-muted">Tax</span>
+              <div className="flex items-center gap-3">
+                <PctInput
+                  name="taxPct"
+                  label="Tax percent"
+                  value={taxPct}
+                  onChange={setTaxPct}
+                />
+                <span className="min-w-16 text-right text-body text-fg">{formatMoney(tax)}</span>
+              </div>
             </div>
             <div className="flex items-center justify-between pt-1.5">
               <span className="text-h2 font-semibold text-fg">Total</span>
