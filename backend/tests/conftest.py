@@ -4,9 +4,13 @@ from sqlalchemy import delete
 
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.core.seed import seed_demo_user
+from app.core.seed import seed_demo_user, seed_inventory_catalogue
 from app.main import app
 from app.models.audit_log import AuditLog
+from app.models.batch import Batch
+from app.models.inventory_movement import InventoryMovement
+from app.models.medicine import Medicine
+from app.models.medicine_category import MedicineCategory
 from app.models.user import User
 
 
@@ -19,10 +23,15 @@ def seed_database():
     """
     db = SessionLocal()
     try:
+        db.execute(delete(InventoryMovement))
+        db.execute(delete(Batch))
+        db.execute(delete(Medicine))
+        db.execute(delete(MedicineCategory))
         db.execute(delete(AuditLog))
         db.execute(delete(User).where(User.email != settings.demo_email))
         db.commit()
         seed_demo_user(db)
+        seed_inventory_catalogue(db)
     finally:
         db.close()
 
