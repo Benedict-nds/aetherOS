@@ -34,6 +34,25 @@ function parsePct(raw: string) {
     return Math.min(n, 100)
 }
 
+function sanitizeDecimal(raw: string) {
+    const cleaned = raw.replace(/[^\d.]/g, '')
+    const [whole = '', ...rest] = cleaned.split('.')
+    const frac = rest.join('').slice(0, 2)
+    const normalizedWhole = whole.replace(/^0+(?=\d)/, '')
+    const next = rest.length > 0 ? `${normalizedWhole}.${frac}` : normalizedWhole
+    if (next === '' || next === '.') return next
+    const n = Number.parseFloat(next)
+    if (!Number.isFinite(n) || n < 0) return ''
+    return next
+}
+
+function sanitizePct(raw: string) {
+    const next = sanitizeDecimal(raw)
+    if (next === '' || next === '.') return next
+    if (Number.parseFloat(next) >= 100) return '100'
+    return next
+}
+
 function lineTotal(line:CartLine){
     return  line.qty * line.unitPrice
 }
@@ -49,12 +68,12 @@ function PctInput({ name, label, value, onChange }: PctInputProps) {
     return (
         <div className="flex w-24 items-center gap-1">
             <input
-                type="text"
+                type="number"
                 inputMode="decimal"
                 name={name}
                 aria-label={label}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={(e) => onChange(sanitizePct(e.target.value))}
                 className="w-full rounded-lg border border-subtle bg-elevated px-2 py-1.5 text-right text-body text-fg outline-none focus:border-accent"
             />
             <span className="text-caption text-muted">%</span>
@@ -206,7 +225,7 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
               name="tendered"
               placeholder="Tendered: 0.00"
               value={tendered}
-              onChange={(e) => setTendered(e.target.value)}
+              onChange={(e) => setTendered(sanitizeDecimal(e.target.value))}
             />
             <div className="shrink-0 pb-0.5 text-right">
               <p className="m-0 text-caption text-muted">Change</p>
