@@ -138,7 +138,7 @@ export const InventoryPage = () => {
       </div>
 
       <div className="overflow-x-auto rounded-[14px] bg-surface">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+        <table className="w-full min-w-180 border-collapse text-left">
           <thead>
             <tr className="border-b border-subtle">
               {TABLE_COLUMNS.map((column) => (
