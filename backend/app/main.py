@@ -14,6 +14,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.modules.inventory.router import categories_router, medicines_router
+from app.modules.reports.router import router as reports_router
 from app.modules.users.router import router as users_router
 
 
@@ -80,6 +81,12 @@ app.include_router(
     categories_router,
     prefix="/api/medicine-categories",
     tags=["medicine-categories"],
+)
+
+app.include_router(
+    reports_router,
+    prefix="/api/reports",
+    tags=["reports"],
 )
 
 
