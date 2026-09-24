@@ -82,21 +82,28 @@ def test_unauthenticated_low_stock_returns_401(client):
     assert response.status_code == 401
 
 
-def test_low_stock_and_dashboard_with_no_batches(client, owner_headers, db_session):
+def test_low_stock_includes_never_stocked_medicine(client, owner_headers, db_session):
     for batch in db_session.scalars(select(Batch)).all():
         db_session.delete(batch)
     db_session.commit()
+
+    medicine = _get_medicine_by_barcode(db_session, "MET500001")
+    assert medicine.reorder_level > 0
 
     response = client.get("/api/reports/low-stock", headers=owner_headers)
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
-    assert body["data"] == []
+
+    match = next(row for row in body["data"] if row["medicine_id"] == medicine.id)
+    assert match["name"] == medicine.name
+    assert match["quantity_on_hand"] == 0
+    assert match["reorder_level"] == medicine.reorder_level
 
     dashboard = client.get("/api/dashboard/summary", headers=owner_headers)
     assert dashboard.status_code == 200
     data = dashboard.json()["data"]
-    assert data["low_stock_count"] == 0
+    assert data["low_stock_count"] >= 1
     assert data["expiring_soon_count"] == 0
     assert data["today_sales"] == {"amount": 0, "currency": "GHS"}
     assert data["open_orders_count"] == 0

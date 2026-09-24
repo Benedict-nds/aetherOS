@@ -25,16 +25,12 @@ def fetch_low_stock_rows(db: Session) -> list[tuple[Medicine, int]]:
     quantities = _batch_quantity_subquery()
 
     quantity_on_hand = func.coalesce(quantities.c.quantity_on_hand, 0)
-    has_batches = quantities.c.medicine_id.isnot(None)
 
     stmt = (
         select(Medicine, quantity_on_hand.label("quantity_on_hand"))
         .outerjoin(quantities, Medicine.id == quantities.c.medicine_id)
         .options(joinedload(Medicine.category))
-        .where(
-            quantity_on_hand <= Medicine.reorder_level,
-            has_batches | (Medicine.reorder_level == 0),
-        )
+        .where(quantity_on_hand <= Medicine.reorder_level)
         .order_by(quantity_on_hand.asc(), Medicine.name.asc())
     )
 
