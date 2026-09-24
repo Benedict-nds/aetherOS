@@ -1,3 +1,6 @@
+from datetime import date, datetime
+from decimal import Decimal
+
 from pydantic import BaseModel, Field
 
 
@@ -60,3 +63,49 @@ class MedicineResponse(BaseModel):
     updated_at: str
 
     model_config = {"from_attributes": True}
+
+
+class BatchCreate(BaseModel):
+    medicine_id: int = Field(gt=0)
+    batch_number: str = Field(min_length=1, max_length=100)
+    expiry_date: date
+    cost_price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
+    selling_price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
+    quantity_received: int = Field(gt=0)
+
+
+class BatchResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    medicine_id: int
+    supplier_id: int | None
+    batch_number: str
+    expiry_date: date | None
+    cost_price: Decimal
+    selling_price: Decimal
+    quantity_on_hand: int
+    quantity_received: int
+    status: str
+    created_at: datetime
+
+
+class InventoryMovementResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    medicine_id: int
+    batch_id: int | None
+    movement_type: str
+    quantity_change: int
+    reference_type: str | None
+    reference_id: int | None
+    user_id: int
+    created_at: datetime
+
+
+class InventoryMovementListResponse(BaseModel):
+    items: list[InventoryMovementResponse]
+    total: int = Field(ge=0)
+    limit: int = Field(ge=1)
+    offset: int = Field(ge=0)

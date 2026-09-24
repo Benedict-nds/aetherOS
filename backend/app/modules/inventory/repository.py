@@ -1,6 +1,8 @@
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.models.batch import Batch
+from app.models.inventory_movement import InventoryMovement
 from app.models.medicine import Medicine
 from app.models.medicine_category import MedicineCategory
 
@@ -79,3 +81,90 @@ def update_medicine(db: Session, medicine: Medicine) -> Medicine:
     db.add(medicine)
     db.flush()
     return medicine
+
+
+def get_batch_by_id(db: Session, batch_id: int) -> Batch | None:
+    return db.get(Batch, batch_id)
+
+
+def get_batch_by_medicine_and_number(
+    db: Session,
+    medicine_id: int,
+    batch_number: str,
+) -> Batch | None:
+    return db.scalar(
+        select(Batch).where(
+            Batch.medicine_id == medicine_id,
+            Batch.batch_number == batch_number,
+        )
+    )
+
+
+def insert_batch(db: Session, batch: Batch) -> Batch:
+    db.add(batch)
+    db.flush()
+    return batch
+
+
+def list_batches_by_medicine(db: Session, medicine_id: int) -> list[Batch]:
+    return list(
+        db.scalars(
+            select(Batch)
+            .where(Batch.medicine_id == medicine_id)
+            .order_by(Batch.expiry_date.asc().nulls_last(), Batch.id.asc())
+        )
+    )
+
+
+def insert_inventory_movement(
+    db: Session,
+    movement: InventoryMovement,
+) -> InventoryMovement:
+    db.add(movement)
+    db.flush()
+    return movement
+
+
+def sum_non_void_quantity(db: Session, medicine_id: int) -> int:
+    total = db.scalar(
+        select(func.coalesce(func.sum(Batch.quantity_on_hand), 0)).where(
+            Batch.medicine_id == medicine_id,
+            Batch.status != "void",
+        )
+    )
+    return int(total or 0)
+
+
+def fetch_inventory_movements(
+    db: Session,
+    *,
+    limit: int,
+    offset: int,
+    medicine_id: int | None = None,
+    batch_id: int | None = None,
+) -> tuple[list[InventoryMovement], int]:
+    filters = []
+
+    if medicine_id is not None:
+        filters.append(InventoryMovement.medicine_id == medicine_id)
+    if batch_id is not None:
+        filters.append(InventoryMovement.batch_id == batch_id)
+
+    base_query = select(InventoryMovement)
+    count_query = select(func.count()).select_from(InventoryMovement)
+
+    if filters:
+        base_query = base_query.where(*filters)
+        count_query = count_query.where(*filters)
+
+    total = db.scalar(count_query) or 0
+    movements = db.scalars(
+        base_query.order_by(
+            InventoryMovement.created_at.desc(),
+            InventoryMovement.id.desc(),
+        )
+        .limit(limit)
+        .offset(offset)
+    ).all()
+
+    return list(movements), total
