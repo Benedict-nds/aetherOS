@@ -13,7 +13,12 @@ from app.core.seed import seed_demo_user, seed_inventory_catalogue
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.dashboard.router import router as dashboard_router
-from app.modules.inventory.router import categories_router, medicines_router
+from app.modules.inventory.router import (
+    batches_router,
+    categories_router,
+    medicines_router,
+    movements_router,
+)
 from app.modules.reports.router import router as reports_router
 from app.modules.users.router import router as users_router
 
@@ -81,6 +86,18 @@ app.include_router(
     categories_router,
     prefix="/api/medicine-categories",
     tags=["medicine-categories"],
+)
+
+app.include_router(
+    batches_router,
+    prefix="/api/batches",
+    tags=["inventory"],
+)
+
+app.include_router(
+    movements_router,
+    prefix="/api/inventory",
+    tags=["inventory"],
 )
 
 app.include_router(
