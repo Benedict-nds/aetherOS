@@ -12,22 +12,33 @@ from app.core.permissions import (
 from app.core.responses import success_response
 from app.models.user import User
 from app.modules.audit.service import resolve_client_ip
-from app.modules.inventory.schemas import MedicineCategoryCreate, MedicineCreate, MedicineUpdate
+from app.modules.inventory.schemas import (
+    BatchCreate,
+    MedicineCategoryCreate,
+    MedicineCreate,
+    MedicineUpdate,
+)
 from app.modules.inventory.service import (
+    create_batch_record,
     create_category_record,
     create_medicine_record,
     get_medicine_record,
+    list_batches_for_medicine,
     list_category_records,
     list_medicine_records,
+    list_movement_records,
     update_medicine_record,
 )
 
 medicines_router = APIRouter()
 categories_router = APIRouter()
+batches_router = APIRouter()
+movements_router = APIRouter()
 
 read_medicines = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST, ROLE_STAFF)
 manage_medicines = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)
 manage_categories = require_roles(ROLE_OWNER, ROLE_ADMIN)
+create_batches = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)
 
 
 @medicines_router.get("")
@@ -61,6 +72,16 @@ def create_medicine(
         ip_address=resolve_client_ip(request),
     )
     return success_response(data=medicine, message="Medicine created")
+
+
+@medicines_router.get("/{medicine_id}/batches")
+def list_medicine_batches(
+    medicine_id: int,
+    current_user: User = Depends(read_medicines),
+    db: Session = Depends(get_db),
+):
+    batches = list_batches_for_medicine(db, medicine_id)
+    return success_response(data=batches, message="Batches retrieved")
 
 
 @medicines_router.get("/{medicine_id}")
@@ -110,3 +131,38 @@ def create_medicine_category(
 ):
     category = create_category_record(db, payload)
     return success_response(data=category, message="Medicine category created")
+
+
+@batches_router.post("", status_code=status.HTTP_201_CREATED)
+def create_batch(
+    payload: BatchCreate,
+    request: Request,
+    current_user: User = Depends(create_batches),
+    db: Session = Depends(get_db),
+):
+    batch = create_batch_record(
+        db,
+        current_user,
+        payload,
+        ip_address=resolve_client_ip(request),
+    )
+    return success_response(data=batch, message="Batch created")
+
+
+@movements_router.get("/movements")
+def list_inventory_movements(
+    current_user: User = Depends(read_medicines),
+    db: Session = Depends(get_db),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    medicine_id: int | None = Query(default=None),
+    batch_id: int | None = Query(default=None),
+):
+    data = list_movement_records(
+        db,
+        limit=limit,
+        offset=offset,
+        medicine_id=medicine_id,
+        batch_id=batch_id,
+    )
+    return success_response(data=data, message="Inventory movements retrieved")
