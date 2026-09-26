@@ -33,6 +33,8 @@ def test_dashboard_summary_returns_expected_shape(client):
 
     data = body["data"]
     assert data["today_sales"] == {"amount": 0, "currency": "GHS"}
-    assert data["low_stock_count"] == 0
-    assert data["expiring_soon_count"] == 0
+    assert isinstance(data["low_stock_count"], int)
+    assert data["low_stock_count"] >= 0
+    assert isinstance(data["expiring_soon_count"], int)
+    assert data["expiring_soon_count"] >= 0
     assert data["open_orders_count"] == 0

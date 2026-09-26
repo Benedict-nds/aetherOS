@@ -19,6 +19,7 @@ from app.modules.inventory.router import (
     medicines_router,
     movements_router,
 )
+from app.modules.reports.router import router as reports_router
 from app.modules.users.router import router as users_router
 
 
@@ -97,6 +98,12 @@ app.include_router(
     movements_router,
     prefix="/api/inventory",
     tags=["inventory"],
+)
+
+app.include_router(
+    reports_router,
+    prefix="/api/reports",
+    tags=["reports"],
 )
 
 
