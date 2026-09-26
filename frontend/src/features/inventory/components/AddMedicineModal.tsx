@@ -1,42 +1,43 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import { Button, InputField } from '@/components/ui'
+import { createMedicineRequest, getErrorMessage } from '../../../lib/api/client'
+import type { MedicineCategory } from '../../../lib/api/types'
 
-/**
- * TODO: LOOK INTO WHICH FIELDS WHOULD BE REQUIRED FOR THE MEDICINE
- */
+const DOSAGE_FORM_OPTIONS = ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream']
+const DEFAULT_CATEGORY_NAME = 'Antibiotics'
 
-
-
-type AddMedicineForm = {
+type FormState = {
   name: string
   genericName: string
-  category: string
+  categoryId: string
   dosageForm: string
   strength: string
   barcode: string
   reorderLevel: string
 }
 
-const EMPTY_FORM: AddMedicineForm = {
-  name: '',
-  genericName: '',
-  category: 'Antibiotics',
-  dosageForm: 'Tablet',
-  strength: '',
-  barcode: '',
-  reorderLevel: '',
-}
+function buildEmptyForm(categories: MedicineCategory[]): FormState {
+  const defaultCategory =
+    categories.find((c) => c.name === DEFAULT_CATEGORY_NAME) ?? categories[0]
 
-const CATEGORY_OPTIONS = ['Antibiotics', 'Cardiovascular', 'Antidiabetic', 'Analgesics', 'Vitamins']
-const DOSAGE_FORM_OPTIONS = ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream']
+  return {
+    name: '',
+    genericName: '',
+    categoryId: defaultCategory ? String(defaultCategory.id) : '',
+    dosageForm: 'Tablet',
+    strength: '',
+    barcode: '',
+    reorderLevel: '',
+  }
+}
 
 type SelectFieldProps = {
   label: string
   value: string
   onChange: (value: string) => void
-  options: string[]
+  options: { label: string; value: string }[]
 }
 
 function SelectField({ label, value, onChange, options }: SelectFieldProps) {
@@ -50,8 +51,8 @@ function SelectField({ label, value, onChange, options }: SelectFieldProps) {
           className="w-full appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-3.5 pr-9 text-body text-fg outline-none focus:border-accent"
         >
           {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
+            <option key={option.value} value={option.value}>
+              {option.label}
             </option>
           ))}
         </select>
@@ -67,49 +68,92 @@ function SelectField({ label, value, onChange, options }: SelectFieldProps) {
 type AddMedicineModalProps = {
   open: boolean
   onClose: () => void
-  onSave?: (medicine: AddMedicineForm) => void
+  categories: MedicineCategory[]
+  /** Called after a successful save so the parent can refetch the list. */
+  onSaved?: () => void
 }
 
-export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProps) => {
-  const [form, setForm] = useState<AddMedicineForm>(EMPTY_FORM)
-  const [error, setError] = useState<string | null>(null)
+export const AddMedicineModal = ({ open, onClose, categories, onSaved }: AddMedicineModalProps) => {
+  const [form, setForm] = useState<FormState>(() => buildEmptyForm(categories))
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleClose = useCallback(() => {
-    setForm(EMPTY_FORM)
-    setError(null)
-    onClose()
-  }, [onClose])
+  // reset the form each time the modal is (re)opened
+  useEffect(() => {
+    if (open) {
+      setForm(buildEmptyForm(categories))
+      setFormError(null)
+      setIsSubmitting(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
+  // close on Escape (not while submitting, so an in-flight request can't be abandoned silently)
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose()
+      if (e.key === 'Escape' && !isSubmitting) onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, handleClose])
+  }, [open, isSubmitting, onClose])
 
   if (!open) return null
 
-  const setField = (key: keyof AddMedicineForm) => (value: string) => {
-    if (key === 'name' && error) setError(null)
+  const setField = (key: keyof FormState) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
-  }
 
-  const handleSubmit = (e: FormEvent) => {
+  const categoryOptions = categories.map((c) => ({ label: c.name, value: String(c.id) }))
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!form.name.trim()) {
-      setError('Medicine name is required.')
+    setFormError(null)
+
+    const trimmedName = form.name.trim()
+    if (!trimmedName) {
+      setFormError('Medicine name is required.')
       return
     }
-    onSave?.(form)
-    handleClose()
+
+    let reorderLevel = 0
+    if (form.reorderLevel.trim() !== '') {
+      const parsed = Number(form.reorderLevel)
+      if (!Number.isFinite(parsed)) {
+        setFormError('Reorder level must be a number.')
+        return
+      }
+      reorderLevel = parsed
+    }
+
+    if (!form.categoryId) {
+      setFormError('Select a category.')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await createMedicineRequest({
+        name: trimmedName,
+        generic_name: form.genericName.trim() || undefined,
+        category_id: Number(form.categoryId),
+        dosage_form: form.dosageForm || undefined,
+        strength: form.strength.trim() || undefined,
+        barcode: form.barcode.trim() || undefined,
+        reorder_level: reorderLevel,
+      })
+      onSaved?.()
+      onClose()
+    } catch (err) {
+      setFormError(getErrorMessage(err, 'Could not save medicine'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={handleClose}
+      onClick={() => !isSubmitting && onClose()}
     >
       <div
         role="dialog"
@@ -127,9 +171,10 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
           </div>
           <button
             type="button"
-            onClick={handleClose}
+            onClick={onClose}
+            disabled={isSubmitting}
             aria-label="Close"
-            className="shrink-0 rounded-md p-1 text-muted outline-none hover:bg-elevated hover:text-fg"
+            className="shrink-0 rounded-md p-1 text-muted outline-none hover:bg-elevated hover:text-fg disabled:opacity-50"
           >
             <X className="size-5" strokeWidth={1.75} />
           </button>
@@ -143,11 +188,6 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
             value={form.name}
             onChange={(e) => setField('name')(e.target.value)}
           />
-          {error ? (
-            <p className="-mt-2 m-0 text-caption text-critical" role="alert">
-              {error}
-            </p>
-          ) : null}
 
           <InputField
             label="Generic name"
@@ -160,15 +200,15 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
           <div className="grid grid-cols-2 gap-4">
             <SelectField
               label="Category"
-              value={form.category}
-              onChange={setField('category')}
-              options={CATEGORY_OPTIONS}
+              value={form.categoryId}
+              onChange={setField('categoryId')}
+              options={categoryOptions}
             />
             <SelectField
               label="Dosage Form"
               value={form.dosageForm}
               onChange={setField('dosageForm')}
-              options={DOSAGE_FORM_OPTIONS}
+              options={DOSAGE_FORM_OPTIONS.map((o) => ({ label: o, value: o }))}
             />
           </div>
 
@@ -197,12 +237,18 @@ export const AddMedicineModal = ({ open, onClose, onSave }: AddMedicineModalProp
             onChange={(e) => setField('reorderLevel')(e.target.value)}
           />
 
+          {formError ? (
+            <p role="alert" className="m-0 text-caption text-critical">
+              {formError}
+            </p>
+          ) : null}
+
           <div className="mt-2 flex items-center justify-end gap-3">
-            <Button type="button" variant="secondary" onClick={handleClose}>
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary">
-              Save Medicine
+            <Button type="submit" variant="primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving…' : 'Save Medicine'}
             </Button>
           </div>
         </form>

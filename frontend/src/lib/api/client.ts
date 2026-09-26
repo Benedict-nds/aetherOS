@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { ApiResponse, AuthUser, LoginData } from './types'
+import type { ApiResponse, AuthUser, LoginData, Medicine, MedicineCategory } from './types'
 import { clearToken, getToken } from './auth/token'
 
 const api = axios.create({
@@ -70,4 +70,33 @@ export function getErrorMessage(error: unknown, fallback = 'Invalid credentials'
 
   if (error instanceof Error && error.message) return error.message
   return fallback
+}
+
+
+/**
+ *  Medicine Catalogue API (Move to dedicated folder later)
+ */
+
+export function listMedicinesRequest(params?: { q?: string; category_id?: number }) {
+  const query = new URLSearchParams()
+  if (params?.q) query.set('q', params.q)
+  if (params?.category_id !== undefined) query.set('category_id', String(params.category_id))
+  const queryString = query.toString()
+  return apiGet<Medicine[]>(`/api/medicines${queryString ? `?${queryString}` : ''}`)
+}
+
+export function listCategoriesRequest() {
+  return apiGet<MedicineCategory[]>('/api/medicine-categories')
+}
+
+export function createMedicineRequest(body: {
+  name: string
+  generic_name?: string
+  category_id: number
+  dosage_form?: string
+  strength?: string
+  barcode?: string
+  reorder_level: number
+}) {
+  return apiPost<Medicine>('/api/medicines', body)
 }
