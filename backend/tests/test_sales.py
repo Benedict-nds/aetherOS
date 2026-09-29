@@ -192,7 +192,7 @@ def test_fefo_consumes_earlier_expiry_first(
     lines = response.json()["data"]["lines"]
     assert len(lines) == 1
     assert lines[0]["batch_id"] == sooner["id"]
-    assert lines[0]["unit_price"] == "15.00"
+    assert Decimal(str(lines[0]["unit_price"])) == Decimal("15.00")
 
     assert db_session.get(Batch, sooner["id"]).quantity_on_hand == 5
     assert db_session.get(Batch, later["id"]).quantity_on_hand == 10

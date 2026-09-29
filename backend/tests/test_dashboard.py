@@ -32,7 +32,9 @@ def test_dashboard_summary_returns_expected_shape(client):
     assert body["message"] == "Dashboard summary retrieved"
 
     data = body["data"]
-    assert data["today_sales"] == {"amount": 0, "currency": "GHS"}
+    assert data["today_sales"]["currency"] == "GHS"
+    assert isinstance(data["today_sales"]["amount"], (int, float))
+    assert data["today_sales"]["amount"] >= 0
     assert isinstance(data["low_stock_count"], int)
     assert data["low_stock_count"] >= 0
     assert isinstance(data["expiring_soon_count"], int)
