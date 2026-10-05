@@ -20,6 +20,7 @@ from app.modules.inventory.router import (
     movements_router,
 )
 from app.modules.reports.router import router as reports_router
+from app.modules.sales.router import router as sales_router
 from app.modules.users.router import router as users_router
 
 
@@ -104,6 +105,12 @@ app.include_router(
     reports_router,
     prefix="/api/reports",
     tags=["reports"],
+)
+
+app.include_router(
+    sales_router,
+    prefix="/api/sales",
+    tags=["sales"],
 )
 
 
