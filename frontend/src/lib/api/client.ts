@@ -1,5 +1,12 @@
 import axios from 'axios'
-import type { ApiResponse, AuthUser, LoginData, Medicine, MedicineCategory } from './types'
+import type {
+  ApiResponse,
+  AuthUser,
+  DashboardSummary,
+  LoginData,
+  Medicine,
+  MedicineCategory,
+} from './types'
 import { clearToken, getToken } from './auth/token'
 
 const api = axios.create({
@@ -99,4 +106,13 @@ export function createMedicineRequest(body: {
   reorder_level: number
 }) {
   return apiPost<Medicine>('/api/medicines', body)
+}
+
+
+/**
+ *  Dashboard API (Move to dedicated folder later)
+ */
+
+export function getDashboardSummaryRequest() {
+  return apiGet<DashboardSummary>('/api/dashboard/summary')
 }

@@ -47,3 +47,14 @@ export type MedicineCategory = {
   status: string
   created_at: string
 }
+
+
+export type DashboardSummary = {
+  expiring_soon_count: number
+  low_stock_count: number
+  open_orders_count: number
+  today_sales: {
+    amount: number
+    currency: string
+  }
+}

@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { StatCard, Button } from '@/components/ui'
+import { getDashboardSummaryRequest, getErrorMessage } from '@/lib/api/client'
+import type { DashboardSummary } from '@/lib/api/types'
 import { AiRecommendationsCard } from '../components/AiRecommendationsCard'
 import { RevenueCard } from '../components/RevenueCard'
 import { RecentActivity } from '../components/RecentActivity'
-import { useAuth } from '@/app/useAuth'
 
-
+// TODO: replace with the signed-in user from your auth context/provider
+const CURRENT_USER = { firstName: 'Amara' }
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -14,9 +17,22 @@ function getGreeting() {
   return 'Good evening'
 }
 
+function formatMoney(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-GH', { style: 'currency', currency }).format(amount)
+}
+
 export const CommandCenterPage = () => {
-  const {user} = useAuth()
-  const firstName = user?.full_name.trim().split(/\s+/)[0] ?? ''
+  const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    getDashboardSummaryRequest()
+      .then((res) => setSummary(res.data))
+      .catch((err) => setLoadError(getErrorMessage(err, 'Could not load dashboard summary')))
+      .finally(() => setIsLoading(false))
+  }, [])
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -32,7 +48,7 @@ export const CommandCenterPage = () => {
 
       <div>
         <h2 className="m-0 text-h2 font-semibold text-fg">
-          {getGreeting()}, {firstName}
+          {getGreeting()}, {CURRENT_USER.firstName}
         </h2>
         <p className="m-0 mt-1 text-body text-muted">
           Here&rsquo;s what needs your attention today.
@@ -40,10 +56,41 @@ export const CommandCenterPage = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Expiring soon" value={7} hint="medicines within 30 days" />
-        <StatCard label="Low stock" value={12} hint="below reorder point" />
-        <StatCard label="Pending invoices" value={3} hint="from 2 suppliers" />
-        <StatCard label="Yesterday's revenue" value="$5,240" hint="+14% vs prior day" />
+        {isLoading ? (
+          <div className="col-span-2 rounded-[14px] bg-surface p-5 text-body text-muted lg:col-span-4">
+            Loading dashboard stats…
+          </div>
+        ) : loadError ? (
+          <div className="col-span-2 rounded-[14px] bg-surface p-5 text-body text-muted lg:col-span-4">
+            {loadError}
+          </div>
+        ) : (
+          <>
+            <StatCard
+              label="Expiring soon"
+              value={summary?.expiring_soon_count ?? 0}
+              hint="medicines within 30 days"
+            />
+            <StatCard
+              label="Low stock"
+              value={summary?.low_stock_count ?? 0}
+              hint="below reorder point"
+            />
+            <StatCard
+              label="Pending invoices"
+              value={summary?.open_orders_count ?? 0}
+              hint="from 2 suppliers"
+            />
+            <StatCard
+              label="Today's sales"
+              value={
+                summary
+                  ? formatMoney(summary.today_sales.amount, summary.today_sales.currency)
+                  : formatMoney(0, 'GHS')
+              }
+            />
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row">
