@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "@/lib/api/types";
-import { getMeRequest, loginRequest, logoutRequest, setOnUnauthorized } from "@/lib/api/client";
+import { setOnUnauthorized } from "@/lib/api/client";
+import { getMeRequest, loginRequest, logoutRequest } from "@/lib/api/auth/api";
 import { clearToken, getToken, setToken } from "@/lib/api/auth/token";
 import { AuthContext } from "./useAuth";
 

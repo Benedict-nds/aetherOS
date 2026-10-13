@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { ChevronDown, Plus, Search } from 'lucide-react'
 import { Button, StatCard, StatusBadge } from '@/components/ui'
-import {
-  getErrorMessage,
-  listCategoriesRequest,
-  listMedicinesRequest,
-} from '../../../lib/api/client'
+import { getErrorMessage } from '@/lib/api/client'
+import { listCategoriesRequest, listMedicinesRequest } from '@/lib/api/medicines'
 import type { Medicine, MedicineCategory } from '../../../lib/api/types'
 import { AddMedicineModal } from '../components/AddMedicineModal'
 
@@ -161,7 +158,7 @@ export const InventoryPage = () => {
       </div>
 
       <div className="overflow-x-auto rounded-[14px] bg-surface">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+        <table className="w-full min-w-180 border-collapse text-left">
           <thead>
             <tr className="border-b border-subtle">
               {TABLE_COLUMNS.map((column) => (

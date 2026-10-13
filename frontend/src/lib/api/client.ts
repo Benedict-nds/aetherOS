@@ -1,13 +1,7 @@
 import axios from 'axios'
-import type {
-  ApiResponse,
-  AuthUser,
-  DashboardSummary,
-  LoginData,
-  Medicine,
-  MedicineCategory,
-} from './types'
+import type { ApiResponse } from './types'
 import { clearToken, getToken } from './auth/token'
+import { endpoints } from './endpoints'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
@@ -20,21 +14,18 @@ export function setOnUnauthorized(handler: (() => void) | null) {
   onUnauthorized = handler
 }
 
-api.interceptors.request.use((config)=>{
+api.interceptors.request.use((config) => {
   const token = getToken()
-
-  if (token) config.headers.Authorization =  `Bearer ${token}`
-
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 api.interceptors.response.use(
   (response) => response,
-  (error) =>{
+  (error) => {
     const status = error.response?.status
-    const url = `${error.config?.baseURL ?? ''}${error.config?.url ?? ''}`
-    const isLogin = url.includes('/api/auth/login')
-    if (status === 401 && !isLogin){
+    const isLogin = error.config?.url === endpoints.auth.login
+    if (status === 401 && !isLogin) {
       clearToken()
       onUnauthorized?.()
     }
@@ -42,77 +33,48 @@ api.interceptors.response.use(
   },
 )
 
-export async function apiGet<T>(path: string): Promise<ApiResponse<T>> {
-  const { data } = await api.get<ApiResponse<T>>(path)
-  return data
-}
+export class ApiError extends Error {
+  status: number
+  body: ApiResponse<unknown> | null
 
-export async function apiPost<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
-  const { data } = await api.post<ApiResponse<T>>(path, body)
-  return data
-}
-
-
-/**
- *  Auth Service API (Move to dedecated folders later)
- */
-
-export function loginRequest(email: string, password: string){
-  return apiPost<LoginData>('/api/auth/login', {email, password})
-}
-
-export function getMeRequest(){
-  return apiGet<AuthUser>('/api/auth/me')
-}
-
-export function logoutRequest() {
-  return apiPost<null>('/api/auth/logout')
-}
-
-export function getErrorMessage(error: unknown, fallback = 'Invalid credentials'): string {
-  if (axios.isAxiosError(error)){
-    const message = (error.response?.data as ApiResponse<unknown> | undefined)?.message
-    if (message) return message
+  constructor(status: number, body: ApiResponse<unknown> | null) {
+    super(body?.message || 'Request failed')
+    this.name = 'ApiError'
+    this.status = status
+    this.body = body
   }
+}
 
+type ApiRequestOptions = {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  body?: unknown
+  params?: Record<string, string | number | undefined>
+}
+
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<ApiResponse<T>> {
+  try {
+    const { data } = await api.request<ApiResponse<T>>({
+      url: path,
+      method: options.method ?? 'GET',
+      data: options.body,
+      params: options.params,
+    })
+    return data
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const body = (error.response?.data ?? null) as ApiResponse<unknown> | null
+      throw new ApiError(error.response?.status ?? 0, body)
+    }
+    throw error
+  }
+}
+
+export function getErrorMessage(error: unknown, fallback = 'Request failed'): string {
+  if (error instanceof ApiError) {
+    if (error.body?.message) return error.body.message
+    if (error.body?.errors.length) return error.body.errors.join(', ')
+    return fallback
+  }
   if (error instanceof Error && error.message) return error.message
   return fallback
-}
-
-
-/**
- *  Medicine Catalogue API (Move to dedicated folder later)
- */
-
-export function listMedicinesRequest(params?: { q?: string; category_id?: number }) {
-  const query = new URLSearchParams()
-  if (params?.q) query.set('q', params.q)
-  if (params?.category_id !== undefined) query.set('category_id', String(params.category_id))
-  const queryString = query.toString()
-  return apiGet<Medicine[]>(`/api/medicines${queryString ? `?${queryString}` : ''}`)
-}
-
-export function listCategoriesRequest() {
-  return apiGet<MedicineCategory[]>('/api/medicine-categories')
-}
-
-export function createMedicineRequest(body: {
-  name: string
-  generic_name?: string
-  category_id: number
-  dosage_form?: string
-  strength?: string
-  barcode?: string
-  reorder_level: number
-}) {
-  return apiPost<Medicine>('/api/medicines', body)
-}
-
-
-/**
- *  Dashboard API (Move to dedicated folder later)
- */
-
-export function getDashboardSummaryRequest() {
-  return apiGet<DashboardSummary>('/api/dashboard/summary')
 }
