@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import { Button, InputField } from '@/components/ui'
-import { createMedicineRequest, getErrorMessage } from '../../../lib/api/client'
+import { getErrorMessage } from '@/lib/api/client'
+import { createMedicineRequest } from '@/lib/api/medicines'
 import type { MedicineCategory } from '../../../lib/api/types'
 
 const DOSAGE_FORM_OPTIONS = ['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream']
@@ -77,16 +78,16 @@ export const AddMedicineModal = ({ open, onClose, categories, onSaved }: AddMedi
   const [form, setForm] = useState<FormState>(() => buildEmptyForm(categories))
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [wasOpen, setWasOpen] = useState(open)
 
-  // reset the form each time the modal is (re)opened
-  useEffect(() => {
+  if (open !== wasOpen) {
+    setWasOpen(open)
     if (open) {
       setForm(buildEmptyForm(categories))
       setFormError(null)
       setIsSubmitting(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }
 
   // close on Escape (not while submitting, so an in-flight request can't be abandoned silently)
   useEffect(() => {
