@@ -1,6 +1,9 @@
 import { Trash2, Minus, Plus } from "lucide-react";
 import { Button, InputField } from "@/components/ui";
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/api/client";
+import { createSaleRequest } from "@/lib/api/sales";
+import type { SalePaymentMethod } from "@/lib/api/types";
 
 
 export type CartLine = {
@@ -16,12 +19,20 @@ type PaymentMethod = "Cash" | "MoMo" | "Card"
 
 const PAYMENT_METHODS: PaymentMethod[] = ['Cash', 'MoMo', 'Card']
 
+const PAYMENT_API_VALUES: Record<PaymentMethod, SalePaymentMethod> = {
+    Cash: 'cash',
+    MoMo: 'momo',
+    Card: 'card',
+}
+
 
 type CartPanelProps = {
     lines:CartLine[]
     onIncrement: (id:string) => void
     onDecrement: (id:string) => void
     onRemove: (id:string) => void
+    /** Called after the API accepts the sale so the page can empty the cart and refresh stock. */
+    onSaleComplete: () => void
 }
 
 function formatMoney(value:number){
@@ -83,7 +94,7 @@ function PctInput({ name, label, value, onChange }: PctInputProps) {
 
 
 
-export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelProps) =>{
+export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComplete}:CartPanelProps) =>{
     const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
     const subtotal = lines.reduce((sum, line) => sum + lineTotal(line), 0)
 
@@ -91,6 +102,9 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
     const [taxPct, setTaxPct] = useState('5')
     const [payment,setPayment] = useState<PaymentMethod>('Cash')
     const [tendered,setTendered] = useState('')
+    const [isCharging, setIsCharging] = useState(false)
+    const [chargeError, setChargeError] = useState<string | null>(null)
+    const [chargeSuccess, setChargeSuccess] = useState<string | null>(null)
 
     const discountRate = parsePct(discountPct)
     const taxRate = parsePct(taxPct)
@@ -102,19 +116,31 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
     const change = Math.max(0, tenderedValue - total)
 
 
-    const handleCharge = () => {
-        console.log("POS sale (static, no API):",{
-            lines,
-            discountPct: discountRate,
-            taxPct: taxRate,
-            payment,
-            subtotal,
-            discountAmount,
-            tax,
-            total,
-            tendered: tenderedValue,
-            change
-        })
+    // Discount, tax and tendered are display-only. The server prices the sale from FEFO batches,
+    // so only the medicine ids, quantities and payment method are sent.
+    const handleCharge = async () => {
+        if (isCharging || lines.length === 0) return
+
+        setChargeError(null)
+        setChargeSuccess(null)
+        setIsCharging(true)
+        try {
+            await createSaleRequest({
+                payment_method: PAYMENT_API_VALUES[payment],
+                lines: lines.map((line) => ({
+                    medicine_id: Number(line.id),
+                    quantity: line.qty,
+                })),
+            })
+            setTendered('')
+            setChargeSuccess('Sale completed.')
+            onSaleComplete()
+        } catch (err) {
+            // covers 409 (e.g. not enough stock) as well: the API message is shown and the cart is kept
+            setChargeError(getErrorMessage(err, 'Could not complete the sale'))
+        } finally {
+            setIsCharging(false)
+        }
     }
 
     return(
@@ -232,14 +258,24 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove}:CartPanelP
               <p className="m-0 text-body text-fg">{formatMoney(change)}</p>
             </div>
           </div>
+          {chargeError ? (
+            <p role="alert" className="m-0 text-caption text-critical">
+              {chargeError}
+            </p>
+          ) : null}
+          {chargeSuccess ? (
+            <p role="status" className="m-0 text-caption text-healthy">
+              {chargeSuccess}
+            </p>
+          ) : null}
           <Button
             type="button"
             variant="primary"
             className="w-full"
-            disabled={lines.length === 0}
+            disabled={lines.length === 0 || isCharging}
             onClick={handleCharge}
           >
-            Charge {formatMoney(total)}
+            {isCharging ? 'Charging…' : `Charge ${formatMoney(total)}`}
           </Button>
         </aside>
       )

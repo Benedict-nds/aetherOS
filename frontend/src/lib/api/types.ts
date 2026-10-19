@@ -65,3 +65,21 @@ export type DashboardSummary = {
     currency: string
   }
 }
+
+export type MedicineBatch = {
+  id: number
+  status: string
+  quantity_on_hand: number
+  expiry_date: string | null
+  // may arrive as a decimal string depending on the serializer, so always wrap in Number()
+  selling_price: number | string
+}
+
+
+export type SalePaymentMethod = 'cash' | 'momo' | 'card'
+
+
+export type CreateSaleBody = {
+  payment_method: SalePaymentMethod
+  lines: { medicine_id: number; quantity: number }[]
+}

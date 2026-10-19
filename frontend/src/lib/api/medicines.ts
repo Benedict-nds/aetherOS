@@ -1,6 +1,6 @@
 import { apiRequest } from './client'
 import { endpoints } from './endpoints'
-import type { Medicine, MedicineCategory } from './types'
+import type { Medicine, MedicineBatch, MedicineCategory } from './types'
 
 export function listMedicinesRequest(params?: { q?: string; category_id?: number }) {
   return apiRequest<Medicine[]>(endpoints.medicines.list, {
@@ -25,4 +25,8 @@ export function createMedicineRequest(body: {
   reorder_level: number
 }) {
   return apiRequest<Medicine>(endpoints.medicines.list, { method: 'POST', body })
+}
+
+export function listMedicineBatchesRequest(medicineId: number) {
+  return apiRequest<MedicineBatch[]>(endpoints.medicines.batches(medicineId))
 }
