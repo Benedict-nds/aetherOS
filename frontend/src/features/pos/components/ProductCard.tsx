@@ -31,7 +31,7 @@ export const ProductCard = ({item, onAdd}: ProductCardProps) =>{
         >
             <span className="text-body text-fg">{item.name}</span>
             <span className="text-caption text-muted">
-                {item.brand} · {item.stockLeft.toLocaleString()} left
+                {item.brand ? `${item.brand} · ` : ''}{item.stockLeft.toLocaleString()} left
             </span>
             <span className="mt-1 flex items-center justify-between">
                 <span className="text-body text-fg">{formatMoney(item.unitPrice)}</span>
