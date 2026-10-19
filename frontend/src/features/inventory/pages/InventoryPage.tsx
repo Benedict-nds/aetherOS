@@ -4,50 +4,58 @@ import { ChevronDown, Plus, Search } from 'lucide-react'
 import { Button, StatCard, StatusBadge } from '@/components/ui'
 import { getErrorMessage } from '@/lib/api/client'
 import { listCategoriesRequest, listMedicinesRequest } from '@/lib/api/medicines'
-import type { Medicine, MedicineCategory } from '../../../lib/api/types'
+import type { Medicine, MedicineCategory, StockStatus } from '@/lib/api/types'
 import { AddMedicineModal } from '../components/AddMedicineModal'
 
 const TABLE_COLUMNS = ['Medicine', 'Category', 'Batch', 'Expiry', 'Qty', 'Status'] as const
 
+const STOCK_STATUS_LABELS: Record<StockStatus, string> = {
+  healthy: 'Healthy',
+  low: 'Low Stock',
+  critical: 'Critical',
+}
+
+const STATUS_FILTER_OPTIONS: FilterOption[] = [
+  { label: 'All Statuses', value: '' },
+  { label: STOCK_STATUS_LABELS.healthy, value: 'healthy' },
+  { label: STOCK_STATUS_LABELS.low, value: 'low' },
+  { label: STOCK_STATUS_LABELS.critical, value: 'critical' },
+]
+
+// "2026-06-30" -> "Jun 2026". Parsed as a local date so the month can't shift across timezones.
+function formatExpiry(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return isoDate
+  return new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric' }).format(date)
+}
+
+function isPastDate(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00`)
+  return !Number.isNaN(date.getTime()) && date < new Date()
+}
+
 type FilterOption = { label: string; value: string }
 
 type FilterSelectProps = {
-  label: string
   options: FilterOption[]
-  value?: string
-  onChange?: (value: string) => void
+  value: string
+  onChange: (value: string) => void
 }
 
-function FilterSelect({ label, options, value, onChange }: FilterSelectProps) {
-  const isControlled = value !== undefined
-
+function FilterSelect({ options, value, onChange }: FilterSelectProps) {
   return (
     <div className="relative">
-      {isControlled ? (
-        <select
-          className="h-full min-w-40 appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-4 pr-9 text-body text-fg outline-none focus:border-accent"
-          value={value}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange?.(e.target.value)}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <select
-          className="h-full min-w-40 appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-4 pr-9 text-body text-fg outline-none focus:border-accent"
-          defaultValue={label}
-        >
-          <option value={label}>{label}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      )}
+      <select
+        className="h-full min-w-40 appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-4 pr-9 text-body text-fg outline-none focus:border-accent"
+        value={value}
+        onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       <ChevronDown
         className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
         strokeWidth={1.75}
@@ -67,6 +75,7 @@ export const InventoryPage = () => {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryId, setCategoryId] = useState<string>('') // '' = All Categories
+  const [statusFilter, setStatusFilter] = useState<string>('') // '' = All Statuses (client-side only)
 
   // load categories once
   useEffect(() => {
@@ -109,6 +118,14 @@ export const InventoryPage = () => {
     ...categories.map((c) => ({ label: c.name, value: String(c.id) })),
   ]
 
+  // status filter runs on the already-loaded rows; the API has no status query param
+  const visibleMedicines = statusFilter
+    ? medicines.filter((m) => m.stock_status === statusFilter)
+    : medicines
+
+  const countByStatus = (status: StockStatus) =>
+    medicines.filter((m) => m.stock_status === status).length
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4">
@@ -121,9 +138,14 @@ export const InventoryPage = () => {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Total SKUs" value={medicines.length} hint="across all categories" />
-        <StatCard label="Healthy" value={9} hint="well-stocked" />
-        <StatCard label="Low stock" value={4} hint="below reorder point" />
-        <StatCard label="Critical" value={2} hint="out of stock or expired" tone="critical" />
+        <StatCard label="Healthy" value={countByStatus('healthy')} hint="well-stocked" />
+        <StatCard label="Low stock" value={countByStatus('low')} hint="below reorder point" />
+        <StatCard
+          label="Critical"
+          value={countByStatus('critical')}
+          hint="out of stock or expired"
+          tone="critical"
+        />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -140,20 +162,11 @@ export const InventoryPage = () => {
             className="w-full rounded-lg border border-subtle bg-elevated py-2.5 pl-10 pr-4 text-body text-fg outline-none placeholder:text-muted focus:border-accent"
           />
         </div>
+        <FilterSelect options={categoryOptions} value={categoryId} onChange={setCategoryId} />
         <FilterSelect
-          label="All Categories"
-          options={categoryOptions}
-          value={categoryId}
-          onChange={setCategoryId}
-        />
-        {/* Visual only — batch status does not exist in the API yet, so this does not filter. */}
-        <FilterSelect
-          label="All Statuses"
-          options={[
-            { label: 'Healthy', value: 'Healthy' },
-            { label: 'Low Stock', value: 'Low Stock' },
-            { label: 'Critical', value: 'Critical' },
-          ]}
+          options={STATUS_FILTER_OPTIONS}
+          value={statusFilter}
+          onChange={setStatusFilter}
         />
       </div>
 
@@ -184,24 +197,40 @@ export const InventoryPage = () => {
                   {loadError}
                 </td>
               </tr>
-            ) : medicines.length === 0 ? (
+            ) : visibleMedicines.length === 0 ? (
               <tr>
                 <td className="px-5 py-4 text-body text-muted" colSpan={TABLE_COLUMNS.length}>
-                  No medicines yet
+                  {medicines.length === 0 ? 'No medicines yet' : 'No medicines match this status'}
                 </td>
               </tr>
             ) : (
-              medicines.map((medicine) => (
+              visibleMedicines.map((medicine) => (
                 <tr key={medicine.id} className="border-b border-subtle last:border-0">
                   <td className="px-5 py-4 text-body text-fg">{medicine.name}</td>
                   <td className="px-5 py-4 text-body text-muted">
                     {medicine.category_name ?? '—'}
                   </td>
-                  <td className="px-5 py-4 text-body text-muted">—</td>
-                  <td className="px-5 py-4 text-body text-fg">—</td>
-                  <td className="px-5 py-4 text-body text-fg">—</td>
+                  <td className="px-5 py-4 text-body text-muted">
+                    {medicine.nearest_batch_number ?? '—'}
+                  </td>
+                  <td
+                    className={`px-5 py-4 text-body ${
+                      medicine.nearest_expiry_date && isPastDate(medicine.nearest_expiry_date)
+                        ? 'text-critical'
+                        : 'text-fg'
+                    }`}
+                  >
+                    {medicine.nearest_expiry_date
+                      ? formatExpiry(medicine.nearest_expiry_date)
+                      : '—'}
+                  </td>
+                  <td className="px-5 py-4 text-body text-fg">
+                    {medicine.quantity_on_hand.toLocaleString()}
+                  </td>
                   <td className="px-5 py-4">
-                    <StatusBadge status="healthy">Active</StatusBadge>
+                    <StatusBadge status={medicine.stock_status}>
+                      {STOCK_STATUS_LABELS[medicine.stock_status]}
+                    </StatusBadge>
                   </td>
                 </tr>
               ))
