@@ -13,6 +13,7 @@ from app.models.medicine import Medicine
 from app.models.medicine_category import MedicineCategory
 from app.models.sale import Sale
 from app.models.sale_line import SaleLine
+from app.models.supplier import Supplier
 from app.models.user import User
 
 
@@ -27,6 +28,7 @@ def seed_database():
     try:
         db.execute(delete(SaleLine))
         db.execute(delete(Sale))
+        db.execute(delete(Supplier))
         db.execute(delete(InventoryMovement))
         db.execute(delete(Batch))
         db.execute(delete(Medicine))

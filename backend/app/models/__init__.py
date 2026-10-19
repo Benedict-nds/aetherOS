@@ -7,6 +7,7 @@ from app.models.role import Role
 from app.models.sale import Sale
 from app.models.sale_line import SaleLine
 from app.models.user import User
+from app.models.supplier import Supplier
 
 __all__ = [
     "AuditLog",
@@ -18,4 +19,5 @@ __all__ = [
     "Sale",
     "SaleLine",
     "User",
+    "Supplier",
 ]
