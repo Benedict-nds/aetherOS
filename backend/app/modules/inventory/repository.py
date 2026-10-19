@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from datetime import date
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -133,6 +136,65 @@ def sum_non_void_quantity(db: Session, medicine_id: int) -> int:
         )
     )
     return int(total or 0)
+
+
+@dataclass(frozen=True)
+class MedicineStockSummary:
+    quantity_on_hand: int
+    nearest_batch_number: str | None
+    nearest_expiry_date: date | None
+
+
+def fetch_stock_summary_for_medicines(
+    db: Session,
+    medicine_ids: list[int],
+) -> dict[int, MedicineStockSummary]:
+    """Aggregate non-void batch qty and nearest in-stock batch per medicine (one query each)."""
+    if not medicine_ids:
+        return {}
+
+    unique_ids = list(dict.fromkeys(medicine_ids))
+
+    qty_rows = db.execute(
+        select(
+            Batch.medicine_id,
+            func.coalesce(func.sum(Batch.quantity_on_hand), 0),
+        )
+        .where(
+            Batch.medicine_id.in_(unique_ids),
+            Batch.status != "void",
+        )
+        .group_by(Batch.medicine_id)
+    ).all()
+    quantity_by_medicine = {medicine_id: int(total) for medicine_id, total in qty_rows}
+
+    nearest_by_medicine: dict[int, Batch] = {}
+    batches = db.scalars(
+        select(Batch)
+        .where(
+            Batch.medicine_id.in_(unique_ids),
+            Batch.status != "void",
+            Batch.quantity_on_hand > 0,
+        )
+        .order_by(
+            Batch.medicine_id.asc(),
+            Batch.expiry_date.asc().nulls_last(),
+            Batch.id.asc(),
+        )
+    ).all()
+    for batch in batches:
+        if batch.medicine_id not in nearest_by_medicine:
+            nearest_by_medicine[batch.medicine_id] = batch
+
+    summaries: dict[int, MedicineStockSummary] = {}
+    for medicine_id in unique_ids:
+        nearest = nearest_by_medicine.get(medicine_id)
+        summaries[medicine_id] = MedicineStockSummary(
+            quantity_on_hand=quantity_by_medicine.get(medicine_id, 0),
+            nearest_batch_number=nearest.batch_number if nearest else None,
+            nearest_expiry_date=nearest.expiry_date if nearest else None,
+        )
+    return summaries
 
 
 def fetch_inventory_movements(

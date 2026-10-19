@@ -46,8 +46,33 @@ def serialize_category(category: MedicineCategory) -> dict:
     ).model_dump()
 
 
-def serialize_medicine(medicine: Medicine) -> dict:
-    return MedicineResponse(
+def stock_status_for(quantity_on_hand: int, reorder_level: int) -> str:
+    if quantity_on_hand == 0:
+        return "critical"
+    if quantity_on_hand <= reorder_level:
+        return "low"
+    return "healthy"
+
+
+def _stock_fields_for_medicine(
+    medicine: Medicine,
+    summary: repository.MedicineStockSummary,
+) -> dict:
+    expiry = summary.nearest_expiry_date
+    return {
+        "quantity_on_hand": summary.quantity_on_hand,
+        "nearest_batch_number": summary.nearest_batch_number,
+        "nearest_expiry_date": expiry.isoformat() if expiry else None,
+        "stock_status": stock_status_for(summary.quantity_on_hand, medicine.reorder_level),
+    }
+
+
+def serialize_medicine(
+    medicine: Medicine,
+    *,
+    stock: repository.MedicineStockSummary | None = None,
+) -> dict:
+    payload = MedicineResponse(
         id=medicine.id,
         name=medicine.name,
         generic_name=medicine.generic_name,
@@ -63,6 +88,9 @@ def serialize_medicine(medicine: Medicine) -> dict:
         created_at=medicine.created_at.isoformat(),
         updated_at=medicine.updated_at.isoformat(),
     ).model_dump()
+    if stock is not None:
+        payload.update(_stock_fields_for_medicine(medicine, stock))
+    return payload
 
 
 def serialize_batch(batch: Batch) -> dict:
@@ -148,16 +176,22 @@ def list_medicine_records(
         category_id=category_id,
         is_active=is_active,
     )
-    return [serialize_medicine(medicine) for medicine in medicines]
+    stock_by_id = repository.fetch_stock_summary_for_medicines(
+        db,
+        [medicine.id for medicine in medicines],
+    )
+    return [
+        serialize_medicine(medicine, stock=stock_by_id[medicine.id])
+        for medicine in medicines
+    ]
 
 
 def get_medicine_record(db: Session, medicine_id: int) -> dict | None:
     medicine = repository.get_medicine_by_id(db, medicine_id)
     if medicine is None:
         return None
-    data = serialize_medicine(medicine)
-    data["quantity_on_hand"] = repository.sum_non_void_quantity(db, medicine.id)
-    return data
+    stock = repository.fetch_stock_summary_for_medicines(db, [medicine.id])
+    return serialize_medicine(medicine, stock=stock[medicine.id])
 
 
 def create_medicine_record(
