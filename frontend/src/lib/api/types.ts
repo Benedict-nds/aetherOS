@@ -22,6 +22,9 @@ export type LoginData = {
 }
 
 
+export type StockStatus = 'healthy' | 'low' | 'critical'
+
+
 export type Medicine = {
   id: number
   name: string
@@ -35,6 +38,10 @@ export type Medicine = {
   unit: string | null
   reorder_level: number
   is_active: boolean
+  quantity_on_hand: number
+  nearest_batch_number: string | null
+  nearest_expiry_date: string | null
+  stock_status: StockStatus
   created_at: string
   updated_at: string
 }
