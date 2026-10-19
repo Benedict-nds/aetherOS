@@ -20,6 +20,7 @@ ENTITY_TYPE_AUTH = "auth"
 ENTITY_TYPE_USER = "user"
 ENTITY_TYPE_MEDICINE = "medicine"
 ENTITY_TYPE_BATCH = "batch"
+ENTITY_TYPE_SUPPLIER = "supplier"
 
 _SENSITIVE_DETAIL_KEYS = frozenset(
     {
