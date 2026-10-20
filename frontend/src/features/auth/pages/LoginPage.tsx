@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate, useNavigate, useNavigation } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Button, InputField } from '@/components/ui'
 
 import { useAuth } from '@/app/useAuth'

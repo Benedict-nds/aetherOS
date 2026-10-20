@@ -6,7 +6,7 @@ export const endpoints = {
     },
     medicines:{
         list:"/api/medicines",
-        categories:"/api/medicines-categories",
+        categories:"/api/medicine-categories",
         batches:(medicineId: number) => `/api/medicines/${medicineId}/batches`,
     },
     sales:{
