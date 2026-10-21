@@ -24,6 +24,26 @@ export type LoginData = {
 
 export type StockStatus = 'healthy' | 'low' | 'critical'
 
+export type LowStockRow = {
+  medicine_id: number
+  name: string
+  category_name: string | null
+  quantity_on_hand: number
+  reorder_level: number
+}
+
+export type ExpiryBucket = 'expired' | '30' | '60' | '90'
+
+export type ExpiryRow = {
+  medicine_id: number
+  name: string
+  batch_id: number
+  batch_number: string
+  expiry_date: string
+  quantity_on_hand: number
+  bucket: ExpiryBucket
+}
+
 
 export type Medicine = {
   id: number

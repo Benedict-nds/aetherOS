@@ -12,6 +12,10 @@ export const endpoints = {
     sales:{
         create:"/api/sales",
     },
+    reports:{
+        lowStock:"/api/reports/low-stock",
+        expiry:"/api/reports/expiry",
+    },
     dashboard:{
         summary:"/api/dashboard/summary"
     }

@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Box, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
+import { Box, FileBarChart, Inbox, LayoutGrid, ShoppingBag, Sparkles } from 'lucide-react'
 import { SidebarNavItem } from '@/components/ui'
 import { useAuth } from '@/app/useAuth'
 
@@ -14,6 +14,7 @@ const NAV_SECTIONS = [
     heading: 'Manage',
     items: [
       { to: '/inventory', label: 'Inventory', icon: <Box {...NAV_ICON_PROPS} /> },
+      { to: '/reports', label: 'Reports', icon: <FileBarChart {...NAV_ICON_PROPS} /> },
       { to: '/pos', label: 'Point of Sale', icon: <ShoppingBag {...NAV_ICON_PROPS} /> },
       { to: '/purchases/receive', label: 'Receive Shipment', icon: <Inbox {...NAV_ICON_PROPS} /> },
     ],
