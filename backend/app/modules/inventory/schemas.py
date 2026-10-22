@@ -1,7 +1,10 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+StockStatus = Literal["healthy", "low", "critical"]
 
 
 class MedicineCategoryCreate(BaseModel):
@@ -61,6 +64,10 @@ class MedicineResponse(BaseModel):
     is_active: bool
     created_at: str
     updated_at: str
+    quantity_on_hand: int | None = None
+    nearest_batch_number: str | None = None
+    nearest_expiry_date: str | None = None
+    stock_status: StockStatus | None = None
 
     model_config = {"from_attributes": True}
 

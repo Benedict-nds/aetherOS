@@ -22,6 +22,9 @@ export type LoginData = {
 }
 
 
+export type StockStatus = 'healthy' | 'low' | 'critical'
+
+
 export type Medicine = {
   id: number
   name: string
@@ -35,6 +38,10 @@ export type Medicine = {
   unit: string | null
   reorder_level: number
   is_active: boolean
+  quantity_on_hand: number
+  nearest_batch_number: string | null
+  nearest_expiry_date: string | null
+  stock_status: StockStatus
   created_at: string
   updated_at: string
 }
@@ -57,4 +64,22 @@ export type DashboardSummary = {
     amount: number
     currency: string
   }
+}
+
+export type MedicineBatch = {
+  id: number
+  status: string
+  quantity_on_hand: number
+  expiry_date: string | null
+  // may arrive as a decimal string depending on the serializer, so always wrap in Number()
+  selling_price: number | string
+}
+
+
+export type SalePaymentMethod = 'cash' | 'momo' | 'card'
+
+
+export type CreateSaleBody = {
+  payment_method: SalePaymentMethod
+  lines: { medicine_id: number; quantity: number }[]
 }

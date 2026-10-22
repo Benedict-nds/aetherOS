@@ -7,6 +7,10 @@ export const endpoints = {
     medicines:{
         list:"/api/medicines",
         categories:"/api/medicines-categories",
+        batches:(medicineId: number) => `/api/medicines/${medicineId}/batches`,
+    },
+    sales:{
+        create:"/api/sales",
     },
     dashboard:{
         summary:"/api/dashboard/summary"
