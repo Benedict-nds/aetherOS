@@ -13,6 +13,8 @@ class Sale(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
     total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    amount_paid: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    change_due: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
