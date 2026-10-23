@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react'
-import { StatusBadge } from '@/components/ui'
+import {
+  Alert,
+  StatusBadge,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableSkeleton,
+} from '@/components/ui'
 import { getErrorMessage } from '@/lib/api/client'
 import { getExpiryReportRequest } from '@/lib/api/reports'
 import type { ExpiryBucket, ExpiryRow, StockStatus } from '@/lib/api/types'
@@ -42,40 +53,41 @@ export const ExpiryTable = ({ withinDays }: { withinDays: number }) => {
   }, [withinDays])
 
   return (
-    <div className="overflow-x-auto rounded-[14px] bg-surface">
-      <table className="w-full min-w-180 border-collapse text-left" aria-busy={isLoading}>
-        <caption className="sr-only">Expiry report within {withinDays} days, including expired batches</caption>
-        <thead>
-          <tr className="border-b border-subtle">
+    <div className="flex flex-col gap-3">
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      <Table aria-busy={isLoading}>
+        <TableCaption>Expiry report within {withinDays} days, including expired batches</TableCaption>
+        <TableHeader>
+          <TableRow>
             {COLUMNS.map((column) => (
-              <th key={column} scope="col" className="px-5 py-3.5 text-caption font-normal uppercase tracking-wider text-muted">
-                {column}
-              </th>
+              <TableHead key={column} scope="col">{column}</TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading || error || rows.length === 0 ? (
-            <tr>
-              <td colSpan={COLUMNS.length} className="px-5 py-4 text-body text-muted">
-                <span role={error ? 'alert' : 'status'}>
-                  {isLoading ? 'Loading…' : error ?? `Nothing expiring in ${withinDays} days`}
-                </span>
-              </td>
-            </tr>
-          ) : rows.map((row) => (
-            <tr key={row.batch_id} className="border-b border-subtle last:border-0">
-              <td className="px-5 py-4 text-body text-fg">{row.name}</td>
-              <td className="px-5 py-4 text-body text-muted">{row.batch_number}</td>
-              <td className="px-5 py-4 text-body text-fg">{formatExpiry(row.expiry_date)}</td>
-              <td className="px-5 py-4 text-body text-fg">{row.quantity_on_hand.toLocaleString()}</td>
-              <td className="px-5 py-4">
-                <StatusBadge status={RISK[row.bucket].status}>{RISK[row.bucket].label}</StatusBadge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableSkeleton columns={COLUMNS.length} />
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={COLUMNS.length} className="text-muted">
+                <span role="status">Nothing expiring in {withinDays} days</span>
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row) => (
+              <TableRow key={row.batch_id}>
+                <TableCell>{row.name}</TableCell>
+                <TableCell className="text-muted">{row.batch_number}</TableCell>
+                <TableCell>{formatExpiry(row.expiry_date)}</TableCell>
+                <TableCell>{row.quantity_on_hand.toLocaleString()}</TableCell>
+                <TableCell>
+                  <StatusBadge status={RISK[row.bucket].status}>{RISK[row.bucket].label}</StatusBadge>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }

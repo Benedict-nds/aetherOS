@@ -63,3 +63,25 @@ export {
   useSidebar,
 } from './shadcn/sidebar'
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './shadcn/tooltip'
+export {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableSkeleton,
+} from './shadcn/table'
+export { Skeleton } from './shadcn/skeleton'
+export { Alert } from './shadcn/alert'
+export { Avatar, AvatarFallback, AvatarImage } from './shadcn/avatar'
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from './shadcn/sheet'

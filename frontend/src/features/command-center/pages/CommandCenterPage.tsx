@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
-import { StatCard, Button } from '@/components/ui'
+import { Alert, Avatar, AvatarFallback, Button, Card, Skeleton, StatCard } from '@/components/ui'
 import { getErrorMessage } from '@/lib/api/client'
 import { getDashboardSummaryRequest } from '@/lib/api/dashboard'
 import type { DashboardSummary } from '@/lib/api/types'
@@ -39,7 +39,9 @@ export const CommandCenterPage = () => {
       <div className="flex items-center justify-between gap-4">
         <h1 className="m-0 text-display font-bold text-fg">Command Center</h1>
         <div className="flex items-center gap-3">
-          <div className="size-9 shrink-0 rounded-full bg-elevated" aria-hidden="true" />
+          <Avatar className="size-9">
+            <AvatarFallback>{CURRENT_USER.firstName.slice(0, 1)}</AvatarFallback>
+          </Avatar>
           <Button variant="primary">
             <Plus className="size-4" strokeWidth={2.5} />
             New Sale
@@ -58,13 +60,17 @@ export const CommandCenterPage = () => {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {isLoading ? (
-          <div className="col-span-2 rounded-[14px] bg-surface p-5 text-body text-muted lg:col-span-4">
-            Loading dashboard stats…
-          </div>
+          Array.from({ length: 4 }, (_, index) => (
+            <Card key={index} className="w-full min-w-0">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-3 w-32" />
+            </Card>
+          ))
         ) : loadError ? (
-          <div className="col-span-2 rounded-[14px] bg-surface p-5 text-body text-muted lg:col-span-4">
+          <Alert variant="destructive" className="col-span-2 lg:col-span-4">
             {loadError}
-          </div>
+          </Alert>
         ) : (
           <>
             <StatCard

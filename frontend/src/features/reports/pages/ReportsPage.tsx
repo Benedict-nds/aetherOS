@@ -1,6 +1,17 @@
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { Field, FieldLabel, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui'
+import {
+  Field,
+  FieldLabel,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui'
 import { LowStockTable } from '../components/LowStockTable'
 import { ExpiryTable } from '../components/ExpiryTable'
 
@@ -8,7 +19,7 @@ type ReportTab = 'low-stock' | 'expiry'
 
 export const ReportsPage = () => {
   const [tab, setTab] = useState<ReportTab>('low-stock')
-  const [withinDays, setWithinDays] = useState(90)
+  const [withinDays, setWithinDays] = useState('90')
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,25 +40,18 @@ export const ReportsPage = () => {
               <FieldLabel htmlFor="expiry-window" className="text-body">
                 Expiry window
               </FieldLabel>
-              <span className="relative">
-                <select
-                  id="expiry-window"
-                  value={withinDays}
-                  onChange={(event) => setWithinDays(Number(event.target.value))}
-                  className="min-w-40 appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-4 pr-9 text-body text-fg outline-none focus:border-accent"
-                >
+              <Select value={withinDays} onValueChange={setWithinDays}>
+                <SelectTrigger id="expiry-window" className="w-auto min-w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
                   {[30, 60, 90].map((days) => (
-                    <option key={days} value={days}>
+                    <SelectItem key={days} value={String(days)}>
                       {days} days
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <ChevronDown
-                  aria-hidden="true"
-                  className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted"
-                  strokeWidth={1.75}
-                />
-              </span>
+                </SelectContent>
+              </Select>
             </Field>
           ) : null}
         </div>
@@ -55,7 +59,7 @@ export const ReportsPage = () => {
           <LowStockTable />
         </TabsContent>
         <TabsContent value="expiry">
-          <ExpiryTable key={withinDays} withinDays={withinDays} />
+          <ExpiryTable key={withinDays} withinDays={Number(withinDays)} />
         </TabsContent>
       </Tabs>
     </div>
