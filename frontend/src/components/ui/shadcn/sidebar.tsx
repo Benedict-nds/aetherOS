@@ -248,10 +248,9 @@ export function SidebarRail({ className, ...props }: ComponentProps<'button'>) {
       aria-label="Toggle Sidebar"
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle Sidebar"
       className={cn(
-        'absolute inset-y-0 z-20 hidden w-4 translate-x-1/2 cursor-w-resize transition-all ease-linear group-data-[side=left]/sidebar:-right-4 group-data-[collapsible=offcanvas]/sidebar:cursor-e-resize sm:flex',
-        'after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-subtle',
+        'absolute inset-y-0 -right-2 z-20 hidden w-4 cursor-w-resize sm:flex',
+        'after:absolute after:inset-y-0 after:left-1/2 after:w-px hover:after:bg-subtle',
         className,
       )}
       {...props}
