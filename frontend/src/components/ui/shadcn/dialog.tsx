@@ -62,6 +62,10 @@ export function DialogHeader({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('mb-4 flex flex-col gap-1.5', className)} {...props} />
 }
 
+export function DialogFooter({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('mt-4 flex items-center justify-end gap-3', className)} {...props} />
+}
+
 export function DialogTitle({
   className,
   ...props

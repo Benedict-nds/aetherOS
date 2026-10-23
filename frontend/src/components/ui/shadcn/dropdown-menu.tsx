@@ -32,6 +32,32 @@ export function DropdownMenuContent({
   )
 }
 
+export function DropdownMenuLabel({
+  className,
+  ...props
+}: ComponentProps<typeof DropdownMenuPrimitive.Label>) {
+  return (
+    <DropdownMenuPrimitive.Label
+      data-slot="dropdown-menu-label"
+      className={cn('px-2 py-1.5 text-caption text-muted', className)}
+      {...props}
+    />
+  )
+}
+
+export function DropdownMenuSeparator({
+  className,
+  ...props
+}: ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  return (
+    <DropdownMenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn('-mx-1 my-1 h-px bg-subtle', className)}
+      {...props}
+    />
+  )
+}
+
 export function DropdownMenuItem({
   className,
   ...props
@@ -40,7 +66,7 @@ export function DropdownMenuItem({
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
       className={cn(
-        'flex cursor-pointer items-center rounded-md px-2 py-1.5 text-body text-fg outline-none data-[highlighted]:bg-elevated',
+        'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-body text-fg outline-none data-[highlighted]:bg-elevated',
         className,
       )}
       {...props}
