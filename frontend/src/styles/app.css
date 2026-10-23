@@ -1,6 +1,21 @@
 @import 'tailwindcss';
 @import './ui.css';
 
+:root {
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --card: var(--bg-surface);
+  --popover: var(--bg-surface);
+  --muted: var(--bg-elevated);
+  --secondary: var(--bg-elevated);
+  --border: var(--border-subtle);
+  --input: var(--border-subtle);
+  --primary: var(--accent-primary);
+  --primary-foreground: var(--bg-base);
+  --muted-foreground: var(--text-secondary);
+  --destructive: var(--status-critical);
+  --radius: 10px;
+}
 
 @theme inline{
 /* Colors → bg-*, text-*, border-* */
