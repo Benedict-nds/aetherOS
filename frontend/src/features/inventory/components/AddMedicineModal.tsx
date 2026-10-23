@@ -1,7 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { ChevronDown, X } from 'lucide-react'
-import { Button, InputField } from '@/components/ui'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  InputField,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui'
 import { getErrorMessage } from '@/lib/api/client'
 import { createMedicineRequest } from '@/lib/api/medicines'
 import type { MedicineCategory } from '../../../lib/api/types'
@@ -35,34 +52,30 @@ function buildEmptyForm(categories: MedicineCategory[]): FormState {
 }
 
 type SelectFieldProps = {
+  id: string
   label: string
   value: string
   onChange: (value: string) => void
   options: { label: string; value: string }[]
 }
 
-function SelectField({ label, value, onChange, options }: SelectFieldProps) {
+function SelectField({ id, label, value, onChange, options }: SelectFieldProps) {
   return (
-    <div className="input-field">
-      <label>{label}</label>
-      <div className="relative w-full">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-lg border border-subtle bg-elevated py-2.5 pl-3.5 pr-9 text-body text-fg outline-none focus:border-accent"
-        >
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <SelectItem key={option.value} value={option.value}>
               {option.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-          strokeWidth={1.75}
-        />
-      </div>
-    </div>
+        </SelectContent>
+      </Select>
+    </Field>
   )
 }
 
@@ -88,18 +101,6 @@ export const AddMedicineModal = ({ open, onClose, categories, onSaved }: AddMedi
       setIsSubmitting(false)
     }
   }
-
-  // close on Escape (not while submitting, so an in-flight request can't be abandoned silently)
-  useEffect(() => {
-    if (!open) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isSubmitting) onClose()
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, isSubmitting, onClose])
-
-  if (!open) return null
 
   const setField = (key: keyof FormState) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -152,108 +153,99 @@ export const AddMedicineModal = ({ open, onClose, categories, onSaved }: AddMedi
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-      onClick={() => !isSubmitting && onClose()}
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !isSubmitting) onClose()
+      }}
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-medicine-title"
-        className="w-full max-w-lg rounded-[14px] border border-subtle bg-surface p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+      <DialogContent
+        className="max-w-lg"
+        onPointerDownOutside={(event) => {
+          if (isSubmitting) event.preventDefault()
+        }}
+        onEscapeKeyDown={(event) => {
+          if (isSubmitting) event.preventDefault()
+        }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 id="add-medicine-title" className="m-0 text-h1 font-semibold text-fg">
-              Add Medicine
-            </h2>
-            <p className="m-0 mt-1 text-body text-muted">Add a new medicine to your catalogue</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            aria-label="Close"
-            className="shrink-0 rounded-md p-1 text-muted outline-none hover:bg-elevated hover:text-fg disabled:opacity-50"
-          >
-            <X className="size-5" strokeWidth={1.75} />
-          </button>
-        </div>
+        <DialogHeader>
+          <DialogTitle className="text-h1">Add Medicine</DialogTitle>
+          <DialogDescription>Add a new medicine to your catalogue</DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <InputField
-            label="Medicine name"
-            name="name"
-            placeholder="e.g. Paracetamol 500mg"
-            value={form.name}
-            onChange={(e) => setField('name')(e.target.value)}
-          />
-
-          <InputField
-            label="Generic name"
-            name="genericName"
-            placeholder="e.g. Acetaminophen"
-            value={form.genericName}
-            onChange={(e) => setField('genericName')(e.target.value)}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <SelectField
-              label="Category"
-              value={form.categoryId}
-              onChange={setField('categoryId')}
-              options={categoryOptions}
-            />
-            <SelectField
-              label="Dosage Form"
-              value={form.dosageForm}
-              onChange={setField('dosageForm')}
-              options={DOSAGE_FORM_OPTIONS.map((o) => ({ label: o, value: o }))}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit}>
+          <FieldGroup>
             <InputField
-              label="Strength"
-              name="strength"
-              placeholder="e.g. 500mg"
-              value={form.strength}
-              onChange={(e) => setField('strength')(e.target.value)}
+              label="Medicine name"
+              name="name"
+              placeholder="e.g. Paracetamol 500mg"
+              value={form.name}
+              onChange={(e) => setField('name')(e.target.value)}
             />
+
             <InputField
-              label="Barcode"
-              name="barcode"
-              placeholder="8901234500xxx"
-              value={form.barcode}
-              onChange={(e) => setField('barcode')(e.target.value)}
+              label="Generic name"
+              name="genericName"
+              placeholder="e.g. Acetaminophen"
+              value={form.genericName}
+              onChange={(e) => setField('genericName')(e.target.value)}
             />
-          </div>
 
-          <InputField
-            label="Reorder level"
-            name="reorderLevel"
-            placeholder="e.g. 50"
-            value={form.reorderLevel}
-            onChange={(e) => setField('reorderLevel')(e.target.value)}
-          />
+            <div className="grid grid-cols-2 gap-4">
+              <SelectField
+                id="category"
+                label="Category"
+                value={form.categoryId}
+                onChange={setField('categoryId')}
+                options={categoryOptions}
+              />
+              <SelectField
+                id="dosageForm"
+                label="Dosage Form"
+                value={form.dosageForm}
+                onChange={setField('dosageForm')}
+                options={DOSAGE_FORM_OPTIONS.map((o) => ({ label: o, value: o }))}
+              />
+            </div>
 
-          {formError ? (
-            <p role="alert" className="m-0 text-caption text-critical">
-              {formError}
-            </p>
-          ) : null}
+            <div className="grid grid-cols-2 gap-4">
+              <InputField
+                label="Strength"
+                name="strength"
+                placeholder="e.g. 500mg"
+                value={form.strength}
+                onChange={(e) => setField('strength')(e.target.value)}
+              />
+              <InputField
+                label="Barcode"
+                name="barcode"
+                placeholder="8901234500xxx"
+                value={form.barcode}
+                onChange={(e) => setField('barcode')(e.target.value)}
+              />
+            </div>
 
-          <div className="mt-2 flex items-center justify-end gap-3">
+            <InputField
+              label="Reorder level"
+              name="reorderLevel"
+              placeholder="e.g. 50"
+              value={form.reorderLevel}
+              onChange={(e) => setField('reorderLevel')(e.target.value)}
+            />
+
+            <FieldError>{formError}</FieldError>
+          </FieldGroup>
+
+          <DialogFooter>
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : 'Save Medicine'}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

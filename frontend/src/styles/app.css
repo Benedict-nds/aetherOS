@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import './ui.css';
 
 :root {
@@ -45,6 +46,7 @@
 
 /* Layout constants (Figma sizes you’d otherwise write as [240px] / [860px]) */
 --spacing-sidebar: 240px;
+--spacing-sidebar-icon: 3rem;
 --breakpoint-login: 860px;
 }
 
