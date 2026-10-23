@@ -14,6 +14,7 @@ import { PanelLeft } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from './button'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
@@ -161,35 +162,21 @@ export function Sidebar({
 
   if (isMobile) {
     return (
-      <>
-        {openMobile ? (
-          <button
-            type="button"
-            aria-label="Close sidebar"
-            className="fixed inset-0 z-40 bg-base/80 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 md:hidden"
-            onClick={() => setOpenMobile(false)}
-          />
-        ) : null}
-        <div
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetContent
+          side={side}
           data-slot="sidebar"
           data-mobile="true"
-          data-state={openMobile ? 'expanded' : 'collapsed'}
-          className={cn(
-            'fixed inset-y-0 z-50 flex w-sidebar flex-col border-r border-subtle bg-surface duration-200 md:hidden',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out',
-            side === 'left' ? 'left-0' : 'right-0',
-            openMobile
-              ? 'translate-x-0'
-              : side === 'left'
-                ? '-translate-x-full'
-                : 'translate-x-full',
-            className,
-          )}
+          className={cn('w-sidebar p-0 [&>button]:hidden', className)}
           {...props}
         >
-          {children}
-        </div>
-      </>
+          <SheetHeader className="sr-only">
+            <SheetTitle>Sidebar</SheetTitle>
+            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+          </SheetHeader>
+          <div className="flex h-full w-full flex-col">{children}</div>
+        </SheetContent>
+      </Sheet>
     )
   }
 

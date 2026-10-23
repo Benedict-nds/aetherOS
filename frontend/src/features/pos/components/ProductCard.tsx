@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { Card } from "@/components/ui";
 
 export type CatalogueItem = {
     id: string
@@ -27,8 +28,9 @@ export const ProductCard = ({item, onAdd}: ProductCardProps) =>{
         <button
         type="button"
         onClick={() => onAdd(item)}
-        className="flex flex-col gap-1.5 rounded-xl bg-surface p-3.5 text-left outline-none hover:ring-1 hover:ring-subtle focus-visible:ring-1 focus-visible:ring-accent"
+        className="w-full rounded-[14px] text-left outline-none hover:ring-1 hover:ring-subtle focus-visible:ring-1 focus-visible:ring-accent"
         >
+            <Card className="gap-1.5 p-3.5">
             <span className="text-body text-fg">{item.name}</span>
             <span className="text-caption text-muted">
                 {item.brand ? `${item.brand} · ` : ''}{item.stockLeft.toLocaleString()} left
@@ -37,10 +39,11 @@ export const ProductCard = ({item, onAdd}: ProductCardProps) =>{
                 <span className="text-body text-fg">{formatMoney(item.unitPrice)}</span>
                 <span 
                 aria-hidden= "true"
-                className="flex size-6 items-center justify-center rounded-full bg-accent text-base">
+                className="flex size-6 items-center justify-center rounded-full bg-accent text-[var(--bg-base)]">
                     <Plus className="size-3.5" strokeWidth={2.5} /> 
                 </span>
             </span>
+            </Card>
         </button>
     )
 }

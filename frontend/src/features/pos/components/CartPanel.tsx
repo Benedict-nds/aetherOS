@@ -1,5 +1,5 @@
 import { Trash2, Minus, Plus } from "lucide-react";
-import { Button, InputField } from "@/components/ui";
+import { Alert, Button, Card, Input, InputField, Tabs, TabsList, TabsTrigger } from "@/components/ui";
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/api/client";
 import { createSaleRequest } from "@/lib/api/sales";
@@ -78,14 +78,14 @@ type PctInputProps = {
 function PctInput({ name, label, value, onChange }: PctInputProps) {
     return (
         <div className="flex w-24 items-center gap-1">
-            <input
-                type="number"
+            <Input
+                type="text"
                 inputMode="decimal"
                 name={name}
                 aria-label={label}
                 value={value}
                 onChange={(e) => onChange(sanitizePct(e.target.value))}
-                className="w-full rounded-lg border border-subtle bg-elevated px-2 py-1.5 text-right text-body text-fg outline-none focus:border-accent"
+                className="px-2 py-1.5 text-right"
             />
             <span className="text-caption text-muted">%</span>
         </div>
@@ -144,7 +144,7 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
     }
 
     return(
-        <aside className="flex w-full flex-col gap-4 rounded-[14px] bg-surface p-6 lg:w-100 lg:shrink-0">
+        <Card className="w-full gap-4 p-6 lg:w-100 lg:shrink-0">
           <div className="flex items-center justify-between">
             <p className="m-0 text-caption text-muted">Walk-in customer (optional)</p>
             <p className="m-0 text-caption text-muted">
@@ -164,31 +164,34 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-caption text-muted">{formatMoney(line.unitPrice)} each</span>
                     <div className="flex items-center gap-2.5">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         aria-label={`Decrease ${line.name}`}
                         onClick={() => onDecrement(line.id)}
-                        className="flex size-5.5 items-center justify-center rounded-md bg-elevated text-fg outline-none hover:text-accent"
+                        className="size-5.5 min-h-0 rounded-md bg-elevated p-0 hover:text-accent"
                       >
                         <Minus className="size-3" strokeWidth={2.5} />
-                      </button>
+                      </Button>
                       <span className="min-w-3 text-center text-caption text-fg">{line.qty}</span>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         aria-label={`Increase ${line.name}`}
                         onClick={() => onIncrement(line.id)}
-                        className="flex size-5.5 items-center justify-center rounded-md bg-elevated text-fg outline-none hover:text-accent"
+                        className="size-5.5 min-h-0 rounded-md bg-elevated p-0 hover:text-accent"
                       >
                         <Plus className="size-3" strokeWidth={2.5} />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="ghost"
                         aria-label={`Remove ${line.name}`}
                         onClick={() => onRemove(line.id)}
-                        className="flex size-5.5 items-center justify-center rounded-md bg-elevated text-fg outline-none hover:text-critical"
+                        className="size-5.5 min-h-0 rounded-md bg-elevated p-0 hover:text-critical"
                     >
                         <Trash2 className="size-3" strokeWidth={2.5} />
-                    </button>
+                    </Button>
                     </div>
                   </div>
                 </div>
@@ -226,25 +229,21 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
               <span className="text-h2 font-semibold text-accent">{formatMoney(total)}</span>
             </div>
           </div>
-          <div className="grid grid-cols-3">
-            {PAYMENT_METHODS.map((method) => {
-              const selected = payment === method
-              return (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setPayment(method)}
-                  className={`py-3 text-body outline-none ${
-                    selected
-                      ? 'border border-accent text-fg'
-                      : 'border border-subtle text-muted'
-                  }`}
-                >
+          <Tabs
+            value={payment}
+            onValueChange={(value) => {
+              if (value === 'Cash' || value === 'MoMo' || value === 'Card') setPayment(value)
+            }}
+            className="gap-0"
+          >
+            <TabsList className="grid w-full grid-cols-3" aria-label="Payment method">
+              {PAYMENT_METHODS.map((method) => (
+                <TabsTrigger key={method} value={method}>
                   {method}
-                </button>
-              )
-            })}
-          </div>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <div className="flex items-end gap-3">
             <InputField
               label="Amount tendered"
@@ -258,16 +257,8 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
               <p className="m-0 text-body text-fg">{formatMoney(change)}</p>
             </div>
           </div>
-          {chargeError ? (
-            <p role="alert" className="m-0 text-caption text-critical">
-              {chargeError}
-            </p>
-          ) : null}
-          {chargeSuccess ? (
-            <p role="status" className="m-0 text-caption text-healthy">
-              {chargeSuccess}
-            </p>
-          ) : null}
+          {chargeError ? <Alert variant="destructive">{chargeError}</Alert> : null}
+          {chargeSuccess ? <Alert variant="success">{chargeSuccess}</Alert> : null}
           <Button
             type="button"
             variant="primary"
@@ -277,6 +268,6 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
           >
             {isCharging ? 'Charging…' : `Charge ${formatMoney(total)}`}
           </Button>
-        </aside>
+        </Card>
       )
 }

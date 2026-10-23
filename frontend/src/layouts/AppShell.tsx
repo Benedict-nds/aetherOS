@@ -1,6 +1,8 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Box, ChevronsUpDown, FileBarChart, Inbox, LayoutGrid, LogOut, ShoppingBag, Sparkles } from 'lucide-react'
 import {
+  Avatar,
+  AvatarFallback,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -25,6 +27,16 @@ import {
 import { useAuth } from '@/app/useAuth'
 
 const NAV_ICON_PROPS = { size: 18, strokeWidth: 1.75, 'aria-hidden': true } as const
+
+function initials(name?: string) {
+  if (!name) return 'PA'
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+}
 
 const NAV_SECTIONS = [
   {
@@ -95,7 +107,9 @@ function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="data-[state=open]:bg-elevated">
-                  <div className="size-8 shrink-0 rounded-full bg-elevated" aria-hidden="true" />
+                  <Avatar>
+                    <AvatarFallback>{initials(user?.full_name)}</AvatarFallback>
+                  </Avatar>
                   <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]/sidebar:hidden">
                     <span className="truncate text-body text-fg">
                       {user?.full_name ?? 'Pharmacy Admin'}

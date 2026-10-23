@@ -1,3 +1,5 @@
+import { Card, CardTitle } from '@/components/ui'
+
 const BARS = [
     {day:"Mon", className:"h-9 flex-1 opacity-35"},
     {day:"Tue", className:"h-12.5 w-[42px] shrink-0 opacity-45"},
@@ -11,8 +13,8 @@ const BARS = [
 
 export const RevenueCard = () =>{
     return (
-        <section className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-[14px] bg-surface p-5">
-            <h2 className="m-0 text-h2 font-semibold text-fg">This week's revenue</h2>
+        <Card className="min-w-0 flex-1 gap-3.5">
+            <CardTitle className="text-h2 font-semibold text-fg">This week's revenue</CardTitle>
             <div className="flex items-center gap-2.5">
                 <span className="text-display font-bold text-fg">$31,720</span>
                 <span className="text-caption text-healthy">↑ 14% vs last week</span>
@@ -22,6 +24,6 @@ export const RevenueCard = () =>{
                 <div key={bar.day} className={`rounded-md bg-accent ${bar.className}`} />
                 ))}
             </div>
-    </section>
+        </Card>
     )
 }

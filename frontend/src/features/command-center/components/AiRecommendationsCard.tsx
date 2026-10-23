@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Card, CardTitle } from "@/components/ui";
 
 const RECS = [
     {
@@ -18,8 +19,8 @@ const RECS = [
 
 export const AiRecommendationsCard = () =>{
     return (
-        <section className="flex min-w-0 flex-1 flex-col gap-4 rounded-[14px] bg-surface p-5">
-            <h2 className="m-0 text-h2 font-semibold text-fg">Today's AI recommendations</h2>
+        <Card className="min-w-0 flex-1 gap-4">
+            <CardTitle className="text-h2 font-semibold text-fg">Today's AI recommendations</CardTitle>
             {RECS.map((rec) => (
                 <div key={rec.action} className="flex items-center justify-between gap-2.5">
                 <div className="flex min-w-0 flex-1 items-start gap-2.5">
@@ -31,6 +32,6 @@ export const AiRecommendationsCard = () =>{
                 </Link>
                 </div>
             ))}
-        </section>
+        </Card>
     )
 }

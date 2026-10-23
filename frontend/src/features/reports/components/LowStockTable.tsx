@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react'
-import { StatusBadge } from '@/components/ui'
+import {
+  Alert,
+  StatusBadge,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableSkeleton,
+} from '@/components/ui'
 import { getErrorMessage } from '@/lib/api/client'
 import { getLowStockReportRequest } from '@/lib/api/reports'
 import type { LowStockRow } from '@/lib/api/types'
@@ -27,43 +38,46 @@ export const LowStockTable = () => {
   }, [])
 
   return (
-    <div className="overflow-x-auto rounded-[14px] bg-surface">
-      <table className="w-full min-w-180 border-collapse text-left" aria-busy={isLoading}>
-        <caption className="sr-only">Low stock report</caption>
-        <thead>
-          <tr className="border-b border-subtle">
+    <div className="flex flex-col gap-3">
+      {error ? <Alert variant="destructive">{error}</Alert> : null}
+      <Table aria-busy={isLoading}>
+        <TableCaption>Low stock report</TableCaption>
+        <TableHeader>
+          <TableRow>
             {COLUMNS.map((column) => (
-              <th key={column} scope="col" className="px-5 py-3.5 text-caption font-normal uppercase tracking-wider text-muted">
-                {column}
-              </th>
+              <TableHead key={column} scope="col">{column}</TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading || error || rows.length === 0 ? (
-            <tr>
-              <td colSpan={COLUMNS.length} className="px-5 py-4 text-body text-muted">
-                <span role={error ? 'alert' : 'status'}>
-                  {isLoading ? 'Loading…' : error ?? 'Nothing below reorder level'}
-                </span>
-              </td>
-            </tr>
-          ) : rows.map((row) => (
-            <tr key={row.medicine_id} className="border-b border-subtle last:border-0">
-              <td className="px-5 py-4 text-body text-fg">{row.name}</td>
-              <td className="px-5 py-4 text-body text-muted">{row.category_name ?? '—'}</td>
-              <td className="px-5 py-4 text-body text-fg">{row.quantity_on_hand.toLocaleString()}</td>
-              <td className="px-5 py-4 text-body text-fg">{row.reorder_level.toLocaleString()}</td>
-              <td className="px-5 py-4 text-body text-fg">{Math.max(0, row.reorder_level - row.quantity_on_hand).toLocaleString()}</td>
-              <td className="px-5 py-4">
-                <StatusBadge status={row.quantity_on_hand === 0 ? 'critical' : 'low'}>
-                  {row.quantity_on_hand === 0 ? 'Critical' : 'Low Stock'}
-                </StatusBadge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableSkeleton columns={COLUMNS.length} />
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={COLUMNS.length} className="text-muted">
+                <span role="status">Nothing below reorder level</span>
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row) => (
+              <TableRow key={row.medicine_id}>
+                <TableCell>{row.name}</TableCell>
+                <TableCell className="text-muted">{row.category_name ?? '—'}</TableCell>
+                <TableCell>{row.quantity_on_hand.toLocaleString()}</TableCell>
+                <TableCell>{row.reorder_level.toLocaleString()}</TableCell>
+                <TableCell>
+                  {Math.max(0, row.reorder_level - row.quantity_on_hand).toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={row.quantity_on_hand === 0 ? 'critical' : 'low'}>
+                    {row.quantity_on_hand === 0 ? 'Critical' : 'Low Stock'}
+                  </StatusBadge>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }

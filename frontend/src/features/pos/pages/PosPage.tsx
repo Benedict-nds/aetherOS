@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Search } from "lucide-react"
+import { Alert, Input, Skeleton } from "@/components/ui"
 import { CartPanel } from "../components/CartPanel"
 import type { CartLine } from "../components/CartPanel"
 import { ProductCard } from "../components/ProductCard"
@@ -154,22 +155,26 @@ export function PosPage() {
             className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted"
             strokeWidth={1.75}
           />
-          <input
-            type="text"
+          <Input
+            type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search medicine or scan barcode..."
-            className="w-full rounded-lg border border-subtle bg-elevated py-2.5 pl-10 pr-4 text-body text-fg outline-none placeholder:text-muted focus:border-accent"
+            className="py-2.5 pr-4 pl-10"
           />
         </div>
         {isLoading ? (
-          <p className="m-0 text-body text-muted">Loading medicines…</p>
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            {Array.from({ length: 8 }, (_, index) => (
+              <Skeleton key={index} className="h-28 rounded-xl" />
+            ))}
+          </div>
         ) : loadError ? (
-          <p className="m-0 text-body text-muted">{loadError}</p>
+          <Alert variant="destructive">{loadError}</Alert>
         ) : filtered.length === 0 ? (
-          <p className="m-0 text-body text-muted">
+          <Alert>
             {catalogue.length === 0 ? "No medicines in stock" : "No medicines match your search"}
-          </p>
+          </Alert>
         ) : (
           <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
             {filtered.map((item) => (
