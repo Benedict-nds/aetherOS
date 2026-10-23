@@ -56,13 +56,13 @@ function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="hover:bg-transparent hover:text-fg">
-              <img src="/assets/logo.png" alt="" className="h-6 w-auto object-contain" />
-              <div className="grid flex-1 text-left leading-tight">
+              <img src="/assets/logo.png" alt="" className="h-6 w-auto shrink-0 object-contain" />
+              <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]/sidebar:hidden">
                 <span className="truncate text-h2 font-semibold text-fg">AetherQore</span>
                 <span className="truncate text-caption text-muted">Pharmacy OS</span>
               </div>
@@ -96,13 +96,13 @@ function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="data-[state=open]:bg-elevated">
                   <div className="size-8 shrink-0 rounded-full bg-elevated" aria-hidden="true" />
-                  <div className="grid flex-1 text-left leading-tight">
+                  <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]/sidebar:hidden">
                     <span className="truncate text-body text-fg">
                       {user?.full_name ?? 'Pharmacy Admin'}
                     </span>
                     <span className="truncate text-caption text-muted">{user?.role ?? 'Owner'}</span>
                   </div>
-                  <ChevronsUpDown className="ml-auto size-4 text-muted" />
+                  <ChevronsUpDown className="ml-auto size-4 text-muted group-data-[collapsible=icon]/sidebar:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="min-w-56" side="right" align="end" sideOffset={4}>
@@ -129,9 +129,9 @@ export const AppShell = () => {
     <SidebarProvider className="h-screen overflow-hidden">
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 items-center gap-2 border-b border-subtle px-4 md:hidden">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b border-subtle px-4">
           <SidebarTrigger />
-          <span className="text-h2 font-semibold text-fg">AetherQore</span>
+          <span className="text-h2 font-semibold text-fg md:hidden">AetherQore</span>
         </header>
         <div className="flex-1 overflow-y-auto">
           <div className="px-8 py-7">

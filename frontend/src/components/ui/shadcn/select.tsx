@@ -45,7 +45,12 @@ export function SelectContent({
         data-slot="select-content"
         position={position}
         className={cn(
-          'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-[10px] border border-subtle bg-surface text-fg shadow-lg',
+          'relative z-50 max-h-96 min-w-32 origin-(--radix-select-content-transform-origin) overflow-hidden rounded-[10px] border border-subtle bg-surface text-fg shadow-lg',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2',
+          'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
           position === 'popper' && 'data-[side=bottom]:translate-y-1',
           className,
         )}

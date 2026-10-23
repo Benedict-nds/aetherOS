@@ -58,6 +58,8 @@ export {
   SidebarMenuItem,
   SidebarNavItem,
   SidebarProvider,
+  SidebarRail,
   SidebarTrigger,
   useSidebar,
 } from './shadcn/sidebar'
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './shadcn/tooltip'
