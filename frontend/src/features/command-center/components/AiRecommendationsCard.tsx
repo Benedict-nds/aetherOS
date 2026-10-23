@@ -5,13 +5,13 @@ const RECS = [
         dot: 'bg-warning',
         body: 'Metformin 850mg will run out in ~4 days. Reorder from Nova Health.',
         action: 'Reorder',
-        to: '/purchases/receive',
+        to: '/reports',
       },
       {
         dot: 'bg-critical',
         body: 'Azithromycin batch AZM-6640 expires Dec 28. Consider a clearance markdown.',
         action: 'Review',
-        to: '/inventory',
+        to: '/reports',
       },
 ] as const
 

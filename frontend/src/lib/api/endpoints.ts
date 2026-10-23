@@ -6,11 +6,15 @@ export const endpoints = {
     },
     medicines:{
         list:"/api/medicines",
-        categories:"/api/medicines-categories",
+        categories:"/api/medicine-categories",
         batches:(medicineId: number) => `/api/medicines/${medicineId}/batches`,
     },
     sales:{
         create:"/api/sales",
+    },
+    reports:{
+        lowStock:"/api/reports/low-stock",
+        expiry:"/api/reports/expiry",
     },
     dashboard:{
         summary:"/api/dashboard/summary"
