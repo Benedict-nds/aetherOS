@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.batch import Batch
 from app.models.sale import Sale
@@ -41,6 +41,19 @@ def insert_sale_line(db: Session, line: SaleLine) -> SaleLine:
     db.add(line)
     db.flush()
     return line
+
+
+def get_sale(db: Session, sale_id: int) -> Sale | None:
+    result = db.execute(
+        select(Sale)
+        .options(
+            joinedload(Sale.user),
+            joinedload(Sale.lines).joinedload(SaleLine.medicine),
+            joinedload(Sale.lines).joinedload(SaleLine.batch),
+        )
+        .where(Sale.id == sale_id)
+    )
+    return result.unique().scalar_one_or_none()
 
 
 def medicine_exists(db: Session, medicine_id: int) -> bool:

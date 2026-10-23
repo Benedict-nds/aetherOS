@@ -12,7 +12,7 @@ from app.core.permissions import (
 from app.core.responses import success_response
 from app.models.user import User
 from app.modules.sales.schemas import SaleCreate
-from app.modules.sales.service import create_sale_record
+from app.modules.sales.service import create_sale_record, get_sale_record
 
 router = APIRouter()
 
@@ -27,3 +27,12 @@ def create_sale(
 ):
     sale = create_sale_record(db, current_user, payload)
     return success_response(data=sale, message="Sale recorded")
+
+
+@router.get("/{sale_id}")
+def get_sale(
+    sale_id: int,
+    current_user: User = Depends(record_sale_access),
+    db: Session = Depends(get_db),
+):
+    return success_response(data=get_sale_record(db, sale_id), message="Sale retrieved")

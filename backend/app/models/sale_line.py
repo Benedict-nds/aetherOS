@@ -24,6 +24,7 @@ class SaleLine(Base):
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    cost_price_snapshot: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
 
     sale = relationship("Sale", back_populates="lines")
     batch = relationship("Batch")
