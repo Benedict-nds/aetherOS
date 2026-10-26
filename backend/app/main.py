@@ -20,6 +20,7 @@ from app.modules.inventory.router import (
     movements_router,
 )
 from app.modules.reports.router import router as reports_router
+from app.modules.purchases.router import router as purchases_router
 from app.modules.sales.router import router as sales_router
 from app.modules.suppliers.router import router as suppliers_router
 from app.modules.users.router import router as users_router
@@ -118,6 +119,12 @@ app.include_router(
     suppliers_router,
     prefix="/api/suppliers",
     tags=["suppliers"],
+)
+
+app.include_router(
+    purchases_router,
+    prefix="/api/purchases",
+    tags=["purchases"],
 )
 
 
