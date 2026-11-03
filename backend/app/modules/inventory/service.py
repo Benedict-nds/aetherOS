@@ -376,6 +376,8 @@ def create_batch_record(
     payload: BatchCreate,
     *,
     ip_address: str | None = None,
+    supplier_id: int | None = None,
+    commit: bool = True,
 ) -> dict:
     medicine = repository.get_medicine_by_id(db, payload.medicine_id)
     if medicine is None:
@@ -411,7 +413,7 @@ def create_batch_record(
         quantity_on_hand=0,
         quantity_received=payload.quantity_received,
         status=_batch_status_for_expiry(payload.expiry_date),
-        supplier_id=None,
+        supplier_id=supplier_id,
     )
 
     try:
@@ -445,7 +447,8 @@ def create_batch_record(
             },
             ip_address=ip_address,
         )
-        db.commit()
+        if commit:
+            db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(
@@ -456,7 +459,8 @@ def create_batch_record(
         db.rollback()
         raise
 
-    db.refresh(saved)
+    if commit:
+        db.refresh(saved)
     return serialize_batch(saved)
 
 
