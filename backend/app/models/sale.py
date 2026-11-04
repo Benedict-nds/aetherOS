@@ -24,3 +24,4 @@ class Sale(Base):
 
     user = relationship("User")
     lines = relationship("SaleLine", back_populates="sale", cascade="all, delete-orphan")
+    refunds = relationship("Refund", back_populates="sale", cascade="all, delete-orphan")

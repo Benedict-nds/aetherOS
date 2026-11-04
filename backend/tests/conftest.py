@@ -11,6 +11,8 @@ from app.models.batch import Batch
 from app.models.inventory_movement import InventoryMovement
 from app.models.medicine import Medicine
 from app.models.medicine_category import MedicineCategory
+from app.models.refund import Refund
+from app.models.refund_item import RefundItem
 from app.models.sale import Sale
 from app.models.sale_line import SaleLine
 from app.models.supplier import Supplier
@@ -26,6 +28,8 @@ def seed_database():
     """
     db = SessionLocal()
     try:
+        db.execute(delete(RefundItem))
+        db.execute(delete(Refund))
         db.execute(delete(SaleLine))
         db.execute(delete(Sale))
         db.execute(delete(Supplier))
