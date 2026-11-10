@@ -12,6 +12,10 @@ export const endpoints = {
     sales:{
         create:"/api/sales",
     },
+    suppliers:{
+        list:"/api/suppliers",
+        detail:(id: number) => `/api/suppliers/${id}`,
+    },
     reports:{
         lowStock:"/api/reports/low-stock",
         expiry:"/api/reports/expiry",
