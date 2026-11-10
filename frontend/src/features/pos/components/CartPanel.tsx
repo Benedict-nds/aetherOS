@@ -1,9 +1,9 @@
 import { Trash2, Minus, Plus } from "lucide-react";
 import { Alert, Button, Card, Input, InputField, Tabs, TabsList, TabsTrigger } from "@/components/ui";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getErrorMessage } from "@/lib/api/client";
 import { createSaleRequest } from "@/lib/api/sales";
-import type { SalePaymentMethod } from "@/lib/api/types";
+import type { Sale, SalePaymentMethod } from "@/lib/api/types";
 
 
 export type CartLine = {
@@ -32,7 +32,8 @@ type CartPanelProps = {
     onDecrement: (id:string) => void
     onRemove: (id:string) => void
     /** Called after the API accepts the sale so the page can empty the cart and refresh stock. */
-    onSaleComplete: () => void
+    onSaleComplete: (sale: Sale) => void
+    onChargingChange: (isCharging: boolean) => void
 }
 
 function formatMoney(value:number){
@@ -94,7 +95,7 @@ function PctInput({ name, label, value, onChange }: PctInputProps) {
 
 
 
-export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComplete}:CartPanelProps) =>{
+export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComplete, onChargingChange}:CartPanelProps) =>{
     const itemCount = lines.reduce((sum, line) => sum + line.qty, 0)
     const subtotal = lines.reduce((sum, line) => sum + lineTotal(line), 0)
 
@@ -103,8 +104,8 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
     const [payment,setPayment] = useState<PaymentMethod>('Cash')
     const [tendered,setTendered] = useState('')
     const [isCharging, setIsCharging] = useState(false)
+    const chargingRef = useRef(false)
     const [chargeError, setChargeError] = useState<string | null>(null)
-    const [chargeSuccess, setChargeSuccess] = useState<string | null>(null)
 
     const discountRate = parsePct(discountPct)
     const taxRate = parsePct(taxPct)
@@ -116,30 +117,34 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
     const change = Math.max(0, tenderedValue - total)
 
 
-    // Discount, tax and tendered are display-only. The server prices the sale from FEFO batches,
-    // so only the medicine ids, quantities and payment method are sent.
+    // Discount and tax remain estimates. Cash tendered is persisted; the receipt uses server totals.
     const handleCharge = async () => {
-        if (isCharging || lines.length === 0) return
+        if (chargingRef.current || lines.length === 0) return
 
+        chargingRef.current = true
         setChargeError(null)
-        setChargeSuccess(null)
         setIsCharging(true)
+        onChargingChange(true)
         try {
-            await createSaleRequest({
+            const res = await createSaleRequest({
                 payment_method: PAYMENT_API_VALUES[payment],
+                ...(payment === 'Cash' && Number.isFinite(tenderedValue) && tenderedValue > 0
+                    ? { amount_paid: tenderedValue } : {}),
                 lines: lines.map((line) => ({
                     medicine_id: Number(line.id),
                     quantity: line.qty,
                 })),
             })
+            if (!res.data) throw new Error('Receipt data was not returned. Check the sale before charging again.')
             setTendered('')
-            setChargeSuccess('Sale completed.')
-            onSaleComplete()
+            onSaleComplete(res.data)
         } catch (err) {
             // covers 409 (e.g. not enough stock) as well: the API message is shown and the cart is kept
             setChargeError(getErrorMessage(err, 'Could not complete the sale'))
         } finally {
             setIsCharging(false)
+            chargingRef.current = false
+            onChargingChange(false)
         }
     }
 
@@ -225,10 +230,11 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
               </div>
             </div>
             <div className="flex items-center justify-between pt-1.5">
-              <span className="text-h2 font-semibold text-fg">Total</span>
+              <span className="text-h2 font-semibold text-fg">Estimated total</span>
               <span className="text-h2 font-semibold text-accent">{formatMoney(total)}</span>
             </div>
           </div>
+          <p className="m-0 text-caption text-muted">Discount and tax are estimates; final totals appear on the receipt.</p>
           <Tabs
             value={payment}
             onValueChange={(value) => {
@@ -244,7 +250,7 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
               ))}
             </TabsList>
           </Tabs>
-          <div className="flex items-end gap-3">
+          {payment === 'Cash' && <div className="flex items-end gap-3">
             <InputField
               label="Amount tendered"
               name="tendered"
@@ -256,9 +262,8 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
               <p className="m-0 text-caption text-muted">Change</p>
               <p className="m-0 text-body text-fg">{formatMoney(change)}</p>
             </div>
-          </div>
+          </div>}
           {chargeError ? <Alert variant="destructive">{chargeError}</Alert> : null}
-          {chargeSuccess ? <Alert variant="success">{chargeSuccess}</Alert> : null}
           <Button
             type="button"
             variant="primary"
@@ -266,7 +271,7 @@ export const CartPanel = ({lines, onIncrement, onDecrement, onRemove, onSaleComp
             disabled={lines.length === 0 || isCharging}
             onClick={handleCharge}
           >
-            {isCharging ? 'Charging…' : `Charge ${formatMoney(total)}`}
+            {isCharging ? 'Charging…' : 'Charge sale'}
           </Button>
         </Card>
       )

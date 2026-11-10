@@ -101,5 +101,28 @@ export type SalePaymentMethod = 'cash' | 'momo' | 'card'
 
 export type CreateSaleBody = {
   payment_method: SalePaymentMethod
+  amount_paid?: number
   lines: { medicine_id: number; quantity: number }[]
+}
+
+// Pydantic serializes Decimal amounts as strings.
+export type Sale = {
+  id: number
+  payment_method: SalePaymentMethod
+  total: number | string
+  amount_paid: number | string
+  change_due: number | string
+  user_id: number
+  created_at: string
+  cashier: { id: number; full_name: string }
+  lines: {
+    id: number
+    batch_id: number
+    medicine_id: number
+    medicine_name: string
+    batch_number: string
+    quantity: number
+    unit_price: number | string
+    line_total: number | string
+  }[]
 }
