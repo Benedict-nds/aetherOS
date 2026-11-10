@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Box, ChevronsUpDown, FileBarChart, Inbox, LayoutGrid, LogOut, ShoppingBag, Sparkles } from 'lucide-react'
+import { Box, ChevronsUpDown, FileBarChart, Inbox, LayoutGrid, LogOut, ShoppingBag, Sparkles, Truck } from 'lucide-react'
 import {
   Avatar,
   AvatarFallback,
@@ -48,6 +48,7 @@ const NAV_SECTIONS = [
     items: [
       { to: '/inventory', label: 'Inventory', icon: <Box {...NAV_ICON_PROPS} /> },
       { to: '/reports', label: 'Reports', icon: <FileBarChart {...NAV_ICON_PROPS} /> },
+      { to: '/suppliers', label: 'Suppliers', icon: <Truck {...NAV_ICON_PROPS} /> },
       { to: '/pos', label: 'Point of Sale', icon: <ShoppingBag {...NAV_ICON_PROPS} /> },
       { to: '/purchases/receive', label: 'Receive Shipment', icon: <Inbox {...NAV_ICON_PROPS} /> },
     ],
