@@ -1,9 +1,13 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from app.modules.reports import repository
-from app.modules.reports.schemas import ExpiryReportRow, LowStockReportRow
+from app.modules.reports.schemas import (
+    DailySalesReport, ExpiryReportRow, InventoryValuationReport,
+    InventoryValuationRow, LowStockReportRow,
+)
 
 def expiry_bucket(expiry_date: date, *, today: date | None = None) -> str:
     today = today or date.today()
@@ -51,3 +55,17 @@ def get_expiry_report(db: Session, *, within_days: int = 90) -> list[dict]:
 def count_expiring_soon(db: Session) -> int:
     rows = get_expiry_report(db, within_days=30)
     return sum(1 for row in rows if row["bucket"] in {"expired", "30"})
+
+
+def get_daily_sales_report(db: Session, *, day: date | None = None) -> dict:
+    day = day if day is not None else datetime.now(timezone.utc).date()
+    return DailySalesReport(date=day, **repository.fetch_daily_sales(db, day=day)).model_dump()
+
+
+def get_inventory_valuation_report(db: Session) -> dict:
+    rows = [InventoryValuationRow(**row) for row in repository.fetch_inventory_valuation_rows(db)]
+    return InventoryValuationReport(
+        total_cost_value=sum((row.cost_value for row in rows), Decimal("0.00")),
+        total_retail_value=sum((row.retail_value for row in rows), Decimal("0.00")),
+        rows=rows,
+    ).model_dump()

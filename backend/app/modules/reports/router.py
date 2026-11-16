@@ -1,3 +1,5 @@
+from datetime import date as Date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,10 @@ from app.core.permissions import (
 )
 from app.core.responses import success_response
 from app.models.user import User
-from app.modules.reports.service import get_expiry_report, get_low_stock_report
+from app.modules.reports.service import (
+    get_daily_sales_report, get_expiry_report,
+    get_inventory_valuation_report, get_low_stock_report,
+)
 
 router = APIRouter()
 
@@ -35,3 +40,24 @@ def expiry_report(
 ):
     rows = get_expiry_report(db, within_days=within_days)
     return success_response(data=rows, message="Expiry report retrieved")
+
+
+@router.get("/daily-sales")
+def daily_sales_report(
+    date: Date | None = Query(default=None),
+    _current_user: User = Depends(require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)),
+    db: Session = Depends(get_db),
+):
+    return success_response(
+        data=get_daily_sales_report(db, day=date), message="Daily sales report retrieved",
+    )
+
+
+@router.get("/inventory-valuation")
+def inventory_valuation_report(
+    _current_user: User = Depends(require_roles(ROLE_OWNER, ROLE_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    return success_response(
+        data=get_inventory_valuation_report(db), message="Inventory valuation report retrieved",
+    )
