@@ -22,6 +22,7 @@ ENTITY_TYPE_MEDICINE = "medicine"
 ENTITY_TYPE_BATCH = "batch"
 ENTITY_TYPE_SALE = "sale"
 ENTITY_TYPE_SUPPLIER = "supplier"
+ENTITY_TYPE_REFUND = "refund"
 
 _SENSITIVE_DETAIL_KEYS = frozenset(
     {
