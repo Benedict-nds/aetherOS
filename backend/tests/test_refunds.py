@@ -155,6 +155,8 @@ def test_full_line_refund_returns_stock_and_creates_movement_and_audit(
     assert data["lines"][0]["batch_id"] == batch["id"]
     assert data["lines"][0]["return_to_stock"] is True
 
+    # The refund committed through a different API session; reload the cached row.
+    db_session.refresh(before_batch)
     refreshed = db_session.get(Batch, batch["id"])
     assert refreshed is not None
     assert refreshed.quantity_on_hand == 10
