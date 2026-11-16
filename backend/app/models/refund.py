@@ -25,6 +25,7 @@ class Refund(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         nullable=False,
+        index=True,
     )
 
     sale = relationship("Sale", back_populates="refunds")
