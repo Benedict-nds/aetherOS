@@ -20,6 +20,7 @@ class Sale(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         nullable=False,
+        index=True,
     )
 
     user = relationship("User")
