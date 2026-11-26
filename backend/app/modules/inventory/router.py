@@ -13,12 +13,14 @@ from app.core.responses import success_response
 from app.models.user import User
 from app.modules.audit.service import resolve_client_ip
 from app.modules.inventory.schemas import (
+    BatchAdjustmentCreate,
     BatchCreate,
     MedicineCategoryCreate,
     MedicineCreate,
     MedicineUpdate,
 )
 from app.modules.inventory.service import (
+    adjust_batch_record,
     create_batch_record,
     create_category_record,
     create_medicine_record,
@@ -39,6 +41,7 @@ read_medicines = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST, ROLE_STA
 manage_medicines = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)
 manage_categories = require_roles(ROLE_OWNER, ROLE_ADMIN)
 create_batches = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)
+adjust_batches = require_roles(ROLE_OWNER, ROLE_ADMIN, ROLE_PHARMACIST)
 
 
 @medicines_router.get("")
@@ -147,6 +150,24 @@ def create_batch(
         ip_address=resolve_client_ip(request),
     )
     return success_response(data=batch, message="Batch created")
+
+
+@batches_router.post("/{batch_id}/adjustments")
+def adjust_batch(
+    batch_id: int,
+    payload: BatchAdjustmentCreate,
+    request: Request,
+    current_user: User = Depends(adjust_batches),
+    db: Session = Depends(get_db),
+):
+    batch = adjust_batch_record(
+        db,
+        current_user,
+        batch_id,
+        payload,
+        ip_address=resolve_client_ip(request),
+    )
+    return success_response(data=batch, message="Batch adjusted")
 
 
 @movements_router.get("/movements")

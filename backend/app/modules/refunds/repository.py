@@ -38,7 +38,7 @@ def get_sale_lines_for_update(
             SaleLine.sale_id == sale_id,
             SaleLine.id.in_(line_ids),
         )
-        .with_for_update()
+        .with_for_update(of=SaleLine)
     )
     return list(db.scalars(stmt).unique().all())
 

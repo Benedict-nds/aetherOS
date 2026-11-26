@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -83,10 +83,6 @@ def test_unauthenticated_low_stock_returns_401(client):
 
 
 def test_low_stock_includes_never_stocked_medicine(client, owner_headers, db_session):
-    for batch in db_session.scalars(select(Batch)).all():
-        db_session.delete(batch)
-    db_session.commit()
-
     medicine = _get_medicine_by_barcode(db_session, "MET500001")
     assert medicine.reorder_level > 0
 
@@ -185,20 +181,39 @@ def test_staff_can_read_reports(client, staff_headers, db_session):
     assert expiry.status_code == 200
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def report_db(client):
+    """Isolate every report test and its API writes from shared suite data."""
     from app.core.db import engine, get_db
     from app.main import app
+    from app.models.inventory_movement import InventoryMovement
+    from app.models.refund import Refund
+    from app.models.refund_item import RefundItem
+    from app.models.sale import Sale
+    from app.models.sale_line import SaleLine
+
     with engine.connect() as connection:
         transaction = connection.begin()
         session = Session(bind=connection, join_transaction_mode="create_savepoint")
+        previous_override = app.dependency_overrides.get(get_db)
         app.dependency_overrides[get_db] = lambda: session
         try:
+            # Clear dependencies before batches, inside the rollback-only transaction.
+            for model in (RefundItem, Refund, SaleLine, Sale, InventoryMovement, Batch):
+                session.execute(delete(model))
             yield session
         finally:
-            app.dependency_overrides.pop(get_db, None)
+            if previous_override is None:
+                app.dependency_overrides.pop(get_db, None)
+            else:
+                app.dependency_overrides[get_db] = previous_override
             session.close()
             transaction.rollback()
+
+
+@pytest.fixture
+def db_session(report_db):
+    return report_db
 
 
 def _report_user(db, role_name):
@@ -228,13 +243,15 @@ def test_daily_sales_breakdowns_and_utc_boundaries(client, owner_headers, report
         (datetime(2040, 10, 19, 23, 59, 59, tzinfo=timezone.utc), "cash", users[1], [(0, 1, "99.00")]),
         (datetime(2040, 10, 21, tzinfo=timezone.utc), "cash", users[1], [(0, 1, "99.00")]),
     ]:
+        total = sum(Decimal(price) * qty for _, qty, price in lines)
         sale = Sale(payment_method=method, user_id=user.id, created_at=timestamp,
-                    total=sum(Decimal(price) * qty for _, qty, price in lines))
+                    total=total, amount_paid=total, change_due=Decimal("0.00"))
         db.add(sale)
         db.flush()
         for i, qty, price in lines:
             db.add(SaleLine(sale_id=sale.id, batch_id=batches[i].id,
-                            medicine_id=medicines[i].id, quantity=qty, unit_price=Decimal(price)))
+                            medicine_id=medicines[i].id, quantity=qty, unit_price=Decimal(price),
+                            cost_price_snapshot=batches[i].cost_price))
     db.commit()
     response = client.get("/api/reports/daily-sales?date=2040-10-20", headers=owner_headers)
     assert response.status_code == 200

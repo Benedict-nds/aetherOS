@@ -19,6 +19,7 @@ from app.modules.audit.service import (
 from app.modules.inventory import repository
 from app.modules.inventory.repository import insert_inventory_movement
 from app.modules.inventory.schemas import (
+    BatchAdjustmentCreate,
     BatchCreate,
     BatchResponse,
     InventoryMovementListResponse,
@@ -31,6 +32,8 @@ from app.modules.inventory.schemas import (
 )
 
 MOVEMENT_TYPE_STOCK_IN = "stock_in"
+MOVEMENT_TYPE_ADJUSTMENT = "adjustment"
+REFERENCE_TYPE_ADJUSTMENT = "adjustment"
 REFERENCE_TYPE_BATCH = "batch"
 BATCH_STATUS_ACTIVE = "active"
 BATCH_STATUS_EXPIRED = "expired"
@@ -462,6 +465,63 @@ def create_batch_record(
     if commit:
         db.refresh(saved)
     return serialize_batch(saved)
+
+
+def adjust_batch_record(
+    db: Session,
+    actor: User,
+    batch_id: int,
+    payload: BatchAdjustmentCreate,
+    *,
+    ip_address: str | None = None,
+) -> dict:
+    try:
+        batch = repository.get_batch_for_update(db, batch_id)
+        if batch is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found")
+        if batch.status == "void":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot adjust void batch")
+        if batch.quantity_on_hand + payload.quantity_change < 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Adjustment would make quantity negative",
+            )
+
+        apply_quantity_change(batch, payload.quantity_change)
+        insert_inventory_movement(
+            db,
+            InventoryMovement(
+                medicine_id=batch.medicine_id,
+                batch_id=batch.id,
+                movement_type=MOVEMENT_TYPE_ADJUSTMENT,
+                quantity_change=payload.quantity_change,
+                reference_type=REFERENCE_TYPE_ADJUSTMENT,
+                reference_id=None,
+                user_id=actor.id,
+                reason=payload.reason,
+            ),
+        )
+        create_audit_log(
+            db,
+            user=actor,
+            action="batch.adjusted",
+            entity_type=ENTITY_TYPE_BATCH,
+            entity_id=batch.id,
+            details={
+                "batch_id": batch.id,
+                "quantity_change": payload.quantity_change,
+                "reason": payload.reason,
+                "quantity_on_hand": batch.quantity_on_hand,
+            },
+            ip_address=ip_address,
+        )
+        # Capture the result while the row lock still protects this adjustment.
+        result = serialize_batch(batch)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return result
 
 
 def list_movement_records(
