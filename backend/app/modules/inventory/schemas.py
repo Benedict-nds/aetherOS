@@ -1,8 +1,8 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 StockStatus = Literal["healthy", "low", "critical"]
 
@@ -79,6 +79,18 @@ class BatchCreate(BaseModel):
     cost_price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
     selling_price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
     quantity_received: int = Field(gt=0)
+
+
+class BatchAdjustmentCreate(BaseModel):
+    quantity_change: int = Field(strict=True)
+    reason: Annotated[str, StringConstraints(strip_whitespace=True, min_length=3)]
+
+    @field_validator("quantity_change")
+    @classmethod
+    def quantity_change_not_zero(cls, value: int) -> int:
+        if value == 0:
+            raise ValueError("Quantity change must be non-zero")
+        return value
 
 
 class BatchResponse(BaseModel):

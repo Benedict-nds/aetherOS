@@ -20,7 +20,9 @@ class Sale(Base):
         DateTime(timezone=True),
         default=datetime.utcnow,
         nullable=False,
+        index=True,
     )
 
     user = relationship("User")
     lines = relationship("SaleLine", back_populates="sale", cascade="all, delete-orphan")
+    refunds = relationship("Refund", back_populates="sale", cascade="all, delete-orphan")

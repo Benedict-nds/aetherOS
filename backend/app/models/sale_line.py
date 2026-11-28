@@ -29,3 +29,4 @@ class SaleLine(Base):
     sale = relationship("Sale", back_populates="lines")
     batch = relationship("Batch")
     medicine = relationship("Medicine")
+    refund_items = relationship("RefundItem", back_populates="sale_line")

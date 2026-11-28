@@ -90,6 +90,15 @@ def get_batch_by_id(db: Session, batch_id: int) -> Batch | None:
     return db.get(Batch, batch_id)
 
 
+def get_batch_for_update(db: Session, batch_id: int) -> Batch | None:
+    return db.scalar(
+        select(Batch)
+        .where(Batch.id == batch_id)
+        .with_for_update(of=Batch)
+        .execution_options(populate_existing=True)
+    )
+
+
 def get_batch_by_medicine_and_number(
     db: Session,
     medicine_id: int,
