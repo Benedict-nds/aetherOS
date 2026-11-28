@@ -4,10 +4,11 @@ import { Alert, Input, Skeleton } from "@/components/ui"
 import { CartPanel } from "../components/CartPanel"
 import type { CartLine } from "../components/CartPanel"
 import { ProductCard } from "../components/ProductCard"
+import { SaleReceipt } from "../components/SaleReceipt"
 import type { CatalogueItem } from "../components/ProductCard"
 import { getErrorMessage } from "@/lib/api/client"
 import { listMedicineBatchesRequest, listMedicinesRequest } from "@/lib/api/medicines"
-import type { Medicine, MedicineBatch } from "@/lib/api/types"
+import type { Medicine, MedicineBatch, Sale } from "@/lib/api/types"
 
 // local calendar date as YYYY-MM-DD, comparable with the API's expiry_date strings
 function todayIso() {
@@ -55,17 +56,16 @@ function toCatalogueItem(
 export function PosPage() {
   const [query, setQuery] = useState("")
   const [cart, setCart] = useState<CartLine[]>([])
+  const [receipt, setReceipt] = useState<Sale | null>(null)
+  const [isCharging, setIsCharging] = useState(false)
 
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
-  // silent = refresh in the background (after a sale) without flashing the loading state
-  const loadCatalogue = useCallback(async (silent = false) => {
-    if (!silent) setIsLoading(true)
-    setLoadError(null)
-    try {
-      const res = await listMedicinesRequest()
+  // Initial state is loading; refresh after a sale happens in the background.
+  const loadCatalogue = useCallback((signal?: AbortSignal) => {
+    return listMedicinesRequest().then(async (res) => {
       const medicines = res.data ?? []
       const today = todayIso()
 
@@ -84,16 +84,23 @@ export function PosPage() {
           }),
       )
 
-      setCatalogue(items.filter((item): item is CatalogueItem => item !== null))
-    } catch (err) {
-      setLoadError(getErrorMessage(err, "Could not load medicines"))
-    } finally {
-      setIsLoading(false)
-    }
+      return items
+    }).then((items) => {
+      if (!signal?.aborted) {
+        setCatalogue(items.filter((item): item is CatalogueItem => item !== null))
+        setLoadError(null)
+      }
+    }).catch((err: unknown) => {
+      if (!signal?.aborted) setLoadError(getErrorMessage(err, "Could not load medicines"))
+    }).finally(() => {
+      if (!signal?.aborted) setIsLoading(false)
+    })
   }, [])
 
   useEffect(() => {
-    void loadCatalogue()
+    const controller = new AbortController()
+    void loadCatalogue(controller.signal)
+    return () => controller.abort()
   }, [loadCatalogue])
 
   const filtered = useMemo(() => {
@@ -141,14 +148,17 @@ export function PosPage() {
     setCart((prev) => prev.filter((line) => line.id !== id))
   }
 
-  const handleSaleComplete = () => {
+  const handleSaleComplete = (sale: Sale) => {
     setCart([])
+    setReceipt(sale)
     // stock changed, so refresh the grid's leftover quantities and prices
-    void loadCatalogue(true)
+    void loadCatalogue()
   }
 
+  if (receipt) return <SaleReceipt sale={receipt} onNewSale={() => { setReceipt(null); setQuery('') }} />
+
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+    <fieldset disabled={isCharging} className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-5">
         <div className="relative">
           <Search
@@ -189,7 +199,8 @@ export function PosPage() {
         onDecrement={decrement}
         onRemove={removeLine}
         onSaleComplete={handleSaleComplete}
+        onChargingChange={setIsCharging}
       />
-    </div>
+    </fieldset>
   )
 }
