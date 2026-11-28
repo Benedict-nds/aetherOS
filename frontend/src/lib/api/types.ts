@@ -127,3 +127,31 @@ export type CreateSaleBody = {
   lines: { medicine_id: number; quantity: number }[]
 }
 
+export type Supplier = {
+  id: number
+  name: string
+  contact_person: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type SupplierListData = {
+  items: Supplier[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export type CreateSupplierBody = {
+  name: string
+  contact_person?: string | null
+  phone?: string | null
+  email?: string | null
+  address?: string | null
+}
+
+export type UpdateSupplierBody = Partial<CreateSupplierBody>

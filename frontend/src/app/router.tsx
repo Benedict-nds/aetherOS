@@ -5,6 +5,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { CommandCenterPage } from '@/features/command-center/pages/CommandCenterPage'
 import { InventoryPage } from '@/features/inventory/pages/InventoryPage'
 import { ReportsPage } from '@/features/reports/pages/ReportsPage'
+import { SuppliersPage } from '@/features/suppliers/pages/SuppliersPage'
 import { PosPage } from '@/features/pos/pages/PosPage'
 import { ReceiveShipmentPage } from '@/features/purchases/pages/ReceiveShipmentPage'
 import { CopilotPage } from '@/features/ai-copilot/pages/CopilotPage'
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
         { path: '/', element: <CommandCenterPage /> },
         { path: '/inventory', element: <InventoryPage /> },
         { path: '/reports', element: <ReportsPage /> },
+        { path: '/suppliers', element: <SuppliersPage /> },
         { path: '/pos', element: <PosPage /> },
         { path: '/purchases/receive', element: <ReceiveShipmentPage /> },
         { path: '/copilot', element: <CopilotPage /> },

@@ -13,6 +13,10 @@ export const endpoints = {
         create:"/api/sales",
         detail:(id: number) => `/api/sales/${id}`,
     },
+    suppliers:{
+        list:"/api/suppliers",
+        detail:(id: number) => `/api/suppliers/${id}`,
+    },
     reports:{
         lowStock:"/api/reports/low-stock",
         expiry:"/api/reports/expiry",
